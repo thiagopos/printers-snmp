@@ -43,7 +43,7 @@ function consultarImpressora(impressora) {
     const ip = impressora['IP Liberty'];
 
     const session = snmp.createSession(ip, COMMUNITY, {
-      timeout: 5000,
+      timeout: 1000,
       retries: 1,
       version: snmp.Version2c,
     });
@@ -75,6 +75,7 @@ function consultarImpressora(impressora) {
         modeloSerie:  obterValor(OID_MODELO_SERIE),
         alerta:       obterValor(OID_ALERTA),
         mensagemTela: obterValor(OID_MENSAGEM_TELA),
+        serialToner:  obterValor(OID_NOMES[0]),
         itens,
       });
     });
@@ -98,10 +99,11 @@ function exibirResultado(resultado) {
   console.log(`  Informação : ${resultado.modeloSerie  ?? 'Não disponível'}`);
   console.log(`  Alerta     : ${resultado.alerta       ?? 'Nenhum'}`);
   console.log(`  Mensagem   : ${resultado.mensagemTela ?? 'Não disponível'}`);
+  console.log(`  Serial Ton.: ${resultado.serialToner  ?? 'Não disponível'}`);
   console.log('─'.repeat(65));
   console.log('  Consumíveis:');
 
-  for (const item of resultado.itens) {
+  for (const [i, item] of resultado.itens.entries()) {
     const pct   = item.percentual !== null ? `${item.percentual}%` : 'N/D';
     const barra = item.percentual !== null ? gerarBarra(item.percentual) : '';
     console.log(`    ${item.nome.padEnd(32)} ${pct.padStart(5)}  ${barra}`);
@@ -112,7 +114,11 @@ function exibirResultado(resultado) {
 
 // ─── Principal ───────────────────────────────────────────────────────────────
 async function main() {
+  const inicio = Date.now();
   console.log(`\nConsultando ${samsungM4020.length} impressora(s) Samsung M4020...\n`);
+
+  let sucesso = 0;
+  const total = samsungM4020.length;
 
   for (const impressora of samsungM4020) {
     console.log(`Consultando: ${impressora.SETOR} (${impressora['IP Liberty']})...`);
@@ -120,12 +126,14 @@ async function main() {
     try {
       const resultado = await consultarImpressora(impressora);
       exibirResultado(resultado);
+      sucesso++;
     } catch (err) {
       console.error(`  ERRO em ${impressora.SETOR} (${impressora['IP Liberty']}): ${err.message}`);
     }
   }
 
-  console.log('\nConsulta finalizada.\n');
+  const segundos = ((Date.now() - inicio) / 1000).toFixed(2);
+  console.log(`\nConsulta finalizada em ${segundos}s — ${sucesso}/${total} impressora(s) responderam.\n`);
 }
 
 main();
