@@ -1,0 +1,826 @@
+[
+  {
+    "SETOR": "0 - ALMOXARIFADO Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9G02P",
+    "IP Prodam": "10.40.16.105",
+    "IP Liberty": "192.168.49.3",
+    "SGHx": "192.168.49.3_hp_e52645"
+  },
+  {
+    "SETOR": "0 - AMBULATÓRIO Atendimento",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R07Y",
+    "IP Prodam": "10.40.16.115",
+    "IP Liberty": "192.168.49.5",
+    "SGHx": "192.168.49.5_hp_e52645"
+  },
+  {
+    "SETOR": "0 - AMBULATÓRIO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R05C",
+    "IP Prodam": "10.40.16.126",
+    "IP Liberty": "192.168.49.8",
+    "SGHx": "192.168.49.8_hp_e52645"
+  },
+  {
+    "SETOR": "0 - AMBULATÓRIO Egressos Sala 1",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24DJ4A",
+    "IP Prodam": "10.40.16.132",
+    "IP Liberty": "192.168.49.9",
+    "SGHx": "192.168.49.9_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - AMBULATÓRIO Egressos Sala 2",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAH8000R0Z",
+    "IP Prodam": "10.40.16.135",
+    "IP Liberty": "192.168.49.10",
+    "SGHx": "192.168.49.10_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - AMBULATÓRIO Egressos Sala 3",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAGA00013N",
+    "IP Prodam": "10.40.16.144",
+    "IP Liberty": "192.168.49.11",
+    "SGHx": "192.168.49.11_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - AMBULATÓRIO Egressos Sala 4",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07M726EZDR",
+    "IP Prodam": "10.40.16.156",
+    "IP Liberty": "192.168.49.12",
+    "SGHx": "192.168.49.12_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - AMBULATÓRIO TO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8P0CK",
+    "IP Prodam": "10.40.16.127",
+    "IP Liberty": "192.168.49.14",
+    "SGHx": "192.168.49.14_hp_e52645"
+  },
+  {
+    "SETOR": "0 - CHEFIA MÉDICA Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R05L",
+    "IP Prodam": "10.40.17.106",
+    "IP Liberty": "192.168.49.15",
+    "SGHx": "192.168.49.15_hp_e52645"
+  },
+  {
+    "SETOR": "0 - CME Material",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R06M",
+    "IP Prodam": "10.40.17.127",
+    "IP Liberty": "192.168.49.16",
+    "SGHx": "192.168.49.16_hp_e52645"
+  },
+  {
+    "SETOR": "0 - CONSULTÓRIO Bucomaxilo",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAG90001GY",
+    "IP Prodam": "10.40.16.160",
+    "IP Liberty": "192.168.49.17",
+    "SGHx": "192.168.49.17_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - CONSULTÓRIO Clínica Médica",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAJ3002D8P",
+    "IP Prodam": "10.40.16.137",
+    "IP Liberty": "192.168.49.19",
+    "SGHx": "192.168.49.19_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - CONSULTÓRIO Neuro Cirurgia PS",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KC44L8L",
+    "IP Prodam": "10.40.16.163",
+    "IP Liberty": "192.168.49.20",
+    "SGHx": "192.168.49.20_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - CONSULTÓRIO Neurologia",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24DXN",
+    "IP Prodam": "10.40.16.164",
+    "IP Liberty": "192.168.49.21",
+    "SGHx": "192.168.49.21_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - CONSULTÓRIO Oftalmo",
+    "MODELO": "HP 408dn",
+    "SÉRIE": "BRBST1N03H",
+    "IP Prodam": "10.40.16.161",
+    "IP Liberty": "192.168.49.22",
+    "SGHx": "192.168.49.22_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - CONSULTÓRIO Ortopedia",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQBH10004SK",
+    "IP Prodam": "10.40.16.159",
+    "IP Liberty": "192.168.49.23",
+    "SGHx": "192.168.49.23_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - ENFERMAGEM Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8L0TY",
+    "IP Prodam": "10.40.16.145",
+    "IP Liberty": "192.168.49.24",
+    "SGHx": "192.168.49.24_hp_e52645"
+  },
+  {
+    "SETOR": "0 - ENFERMAGEM Prescrição",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K522PEFA",
+    "IP Prodam": "10.40.17.101",
+    "IP Liberty": "192.168.49.25",
+    "SGHx": "192.168.49.25_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - FARMÁCIA Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R06G",
+    "IP Prodam": "10.40.16.112",
+    "IP Liberty": "192.168.49.26",
+    "SGHx": "192.168.49.26_hp_e52645"
+  },
+  {
+    "SETOR": "0 - FARMÁCIA Dispensação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ7D128",
+    "IP Prodam": "10.40.16.129",
+    "IP Liberty": "192.168.49.27",
+    "SGHx": "192.168.49.27_hp_e52645"
+  },
+  {
+    "SETOR": "0 - FARMÁCIA Mezanino",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8L0RM",
+    "IP Prodam": "10.40.16.140",
+    "IP Liberty": "192.168.49.28",
+    "SGHx": "192.168.49.28_hp_e52645"
+  },
+  {
+    "SETOR": "0 - GASOTERAPIA Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R056",
+    "IP Prodam": "10.40.16.141",
+    "IP Liberty": "192.168.49.29",
+    "SGHx": "192.168.49.29_hp_e52645"
+  },
+  {
+    "SETOR": "0 - NIR Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R04B",
+    "IP Prodam": "10.40.17.104",
+    "IP Liberty": "192.168.49.30",
+    "SGHx": "192.168.49.30_hp_e52645"
+  },
+  {
+    "SETOR": "0 - NIR Ecocardiograma",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K11166MA",
+    "IP Prodam": "10.40.16.158",
+    "IP Liberty": "192.168.49.31",
+    "SGHx": "192.168.49.31_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PLANTÃO ADM Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBST6L0S5",
+    "IP Prodam": "10.40.16.182",
+    "IP Liberty": "192.168.49.32",
+    "SGHx": "192.168.49.32_hp_e52645"
+  },
+  {
+    "SETOR": "0 - PRONTUÁRIO Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R069",
+    "IP Prodam": "10.40.17.100",
+    "IP Liberty": "192.168.49.33",
+    "SGHx": "192.168.49.33_hp_e52645"
+  },
+  {
+    "SETOR": "0 - PS Check-In",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KB24HWZA",
+    "IP Prodam": "10.40.16.101",
+    "IP Liberty": "192.168.49.1",
+    "SGHx": "192.168.49.1_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS EMERGÊNCIA I Choque",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K723BE1A",
+    "IP Prodam": "10.40.16.157",
+    "IP Liberty": "192.168.49.34",
+    "SGHx": "192.168.49.34_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS EMERGÊNCIA II Cirurgia Geral",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07M926Z1VA",
+    "IP Prodam": "10.40.16.143",
+    "IP Liberty": "192.168.49.18",
+    "SGHx": "192.168.49.18_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS EMERGÊNCIA II Enfermagem",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K823SSGA",
+    "IP Prodam": "?",
+    "IP Liberty": "192.168.49.41",
+    "SGHx": "192.168.49.41_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS Farmácia Satélite",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8P0P4",
+    "IP Prodam": "?",
+    "IP Liberty": "192.168.49.35",
+    "SGHx": "192.168.49.35_HP_E52645"
+  },
+  {
+    "SETOR": "0 - PS GO Médicos Sala1 (Mãe Paulistana)",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAJ2001TYV",
+    "IP Prodam": "10.40.17.118",
+    "IP Liberty": "192.168.49.2",
+    "SGHx": "192.168.49.2_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS GO Médicos Sala2 (Mãe Paulistana)",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAGA00049K",
+    "IP Prodam": "10.40.16.165",
+    "IP Liberty": "192.168.49.120",
+    "SGHx": "192.168.49.120_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS Infantil",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24DA3A",
+    "IP Prodam": "10.40.16.152",
+    "IP Liberty": "192.168.49.37",
+    "SGHx": "192.168.49.37_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS Observação Feminina",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K522P95A",
+    "IP Prodam": "10.40.16.162",
+    "IP Liberty": "192.168.49.38",
+    "SGHx": "192.168.49.38_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - PS Prescrição",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZEQYBQAG70000M",
+    "IP Prodam": "10.40.17.123",
+    "IP Liberty": "192.168.49.40",
+    "SGHx": "192.168.49.40_samsung_m4020"
+  },
+  {
+    "SETOR": "0 - QUALIDADE Coord",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R042",
+    "IP Prodam": "10.40.16.134",
+    "IP Liberty": "192.168.49.72",
+    "SGHx": "192.168.49.72_hp_e52645"
+  },
+  {
+    "SETOR": "0 - ROUPARIA Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R03Z",
+    "IP Prodam": "10.40.16.138",
+    "IP Liberty": "192.168.49.42",
+    "SGHx": "192.168.49.42_hp_e52645"
+  },
+  {
+    "SETOR": "0 - SAME Arquivo",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8Q03N",
+    "IP Prodam": "10.40.16.133",
+    "IP Liberty": "192.168.49.43",
+    "SGHx": "192.168.49.43_hp_e52645"
+  },
+  {
+    "SETOR": "0 - SERVIÇO SOCIAL Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0FT",
+    "IP Prodam": "10.40.16.118",
+    "IP Liberty": "192.168.49.44",
+    "SGHx": "192.168.49.44_hp_e52645"
+  },
+  {
+    "SETOR": "0 - SESMT Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0L0",
+    "IP Prodam": "10.40.16.103",
+    "IP Liberty": "192.168.49.85",
+    "SGHx": "192.168.49.85_hp_e52645"
+  },
+  {
+    "SETOR": "0 - SND Nutrição",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ7D134",
+    "IP Prodam": "10.40.17.109",
+    "IP Liberty": "192.168.49.45",
+    "SGHx": "192.168.49.45_hp_e52645"
+  },
+  {
+    "SETOR": "0 - SPDM Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8P0L2",
+    "IP Prodam": "10.40.17.140",
+    "IP Liberty": "192.168.49.4",
+    "SGHx": "192.168.49.4_hp_e52645"
+  },
+  {
+    "SETOR": "0 - ZELADORIA Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R07B",
+    "IP Prodam": "10.40.17.115",
+    "IP Liberty": "192.168.49.46",
+    "SGHx": "192.168.49.46_hp_e52645"
+  },
+  {
+    "SETOR": "1 - CENTRO CIRÚRGICO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R060",
+    "IP Prodam": "10.40.17.125",
+    "IP Liberty": "192.168.49.47",
+    "SGHx": "192.168.49.47_hp_e52645"
+  },
+  {
+    "SETOR": "1 - CENTRO CIRÚRGICO Prescrição",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAJ20016HR",
+    "IP Prodam": "10.40.16.130",
+    "IP Liberty": "192.168.49.48",
+    "SGHx": "192.168.49.48_samsung_m4020"
+  },
+  {
+    "SETOR": "1 - CENTRO OBSTRÉTICO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9X01F",
+    "IP Prodam": "10.40.16.123",
+    "IP Liberty": "192.168.49.50",
+    "SGHx": "192.168.49.50_hp_e52645"
+  },
+  {
+    "SETOR": "1 - CENTRO OBSTRÉTICO Enf. Corredor",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07JC10TJ0",
+    "IP Prodam": "10.40.16.180",
+    "IP Liberty": "192.168.49.6",
+    "SGHx": "192.168.49.6_samsung_m4020"
+  },
+  {
+    "SETOR": "1 - CENTRO OBSTRÉTICO Pré-Parto",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBM726FNV",
+    "IP Prodam": "10.40.16.181",
+    "IP Liberty": "192.168.49.7",
+    "SGHx": "192.168.49.7_samsung_m4020"
+  },
+  {
+    "SETOR": "1 - CENTRO OBSTRÉTICO Prescrição",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KB24J4FA",
+    "IP Prodam": "10.40.16.110",
+    "IP Liberty": "192.168.49.52",
+    "SGHx": "192.168.49.52_samsung_m4020"
+  },
+  {
+    "SETOR": "1 - CURATIVO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8P09S",
+    "IP Prodam": "10.40.16.146",
+    "IP Liberty": "192.168.49.53",
+    "SGHx": "192.168.49.53_hp_e52645"
+  },
+  {
+    "SETOR": "1 - OPME Material",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0LJ",
+    "IP Prodam": "10.40.16.183",
+    "IP Liberty": "192.168.49.54",
+    "SGHx": "192.168.49.54_hp_e52645"
+  },
+  {
+    "SETOR": "1 - UTI ADULTO Enfermagem",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9X026",
+    "IP Prodam": "10.40.16.121",
+    "IP Liberty": "192.168.49.55",
+    "SGHx": "192.168.49.55_hp_e52645"
+  },
+  {
+    "SETOR": "1 - UTI ADULTO Prescrição Ala A",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZEQYBQAG4001ERH",
+    "IP Prodam": "10.40.17.111",
+    "IP Liberty": "192.168.49.56",
+    "SGHx": "192.168.49.56_samsung_m4020"
+  },
+  {
+    "SETOR": "1 - UTI ADULTO Prescrição Ala B",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24DJ0A",
+    "IP Prodam": "10.40.16.167",
+    "IP Liberty": "192.168.49.57",
+    "SGHx": "192.168.49.57_samsung_m4020"
+  },
+  {
+    "SETOR": "2 - COREME Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R04Q",
+    "IP Prodam": "10.40.17.138",
+    "IP Liberty": "192.168.49.58",
+    "SGHx": "192.168.49.58_hp_e52645"
+  },
+  {
+    "SETOR": "2 - DESENVOLVIMENTO Administração",
+    "MODELO": "HP E87660 A3",
+    "SÉRIE": "CNC1Q26042",
+    "IP Prodam": "10.40.16.119",
+    "IP Liberty": "192.168.49.59",
+    "SGHx": "192.168.49.59_hp_e87660"
+  },
+  {
+    "SETOR": "2 - DIR Administrativa",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R07K",
+    "IP Prodam": "10.40.16.104",
+    "IP Liberty": "192.168.49.60",
+    "SGHx": "192.168.49.60_hp_e52645"
+  },
+  {
+    "SETOR": "2 - DIR Apoio",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R07T",
+    "IP Prodam": "10.40.17.103",
+    "IP Liberty": "192.168.49.61",
+    "SGHx": "192.168.49.61_hp_e52645"
+  },
+  {
+    "SETOR": "2 - DIR Enfermagem",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0L4",
+    "IP Prodam": "10.40.16.109",
+    "IP Liberty": "192.168.49.62",
+    "SGHx": "192.168.49.62_hp_e52645"
+  },
+  {
+    "SETOR": "2 - DIR Gestão de Adm Pessoal",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9X00L",
+    "IP Prodam": "10.40.16.131",
+    "IP Liberty": "192.168.49.63",
+    "SGHx": "192.168.49.63_hp_e52645"
+  },
+  {
+    "SETOR": "2 - DIR Recursos Humano",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0NN",
+    "IP Prodam": "10.40.16.107",
+    "IP Liberty": "192.168.49.64",
+    "SGHx": "192.168.49.64_hp_e52645"
+  },
+  {
+    "SETOR": "2 - DIR TECNICA Coordenação",
+    "MODELO": "HP E57540 Cor",
+    "SÉRIE": "BRBSQ8V02H",
+    "IP Prodam": "10.40.16.128",
+    "IP Liberty": "192.168.49.66",
+    "SGHx": "192.168.49.66_hp_e57540"
+  },
+  {
+    "SETOR": "2 - DTI Informática",
+    "MODELO": "HP E57540 Cor",
+    "SÉRIE": "BRBSQ8V048",
+    "IP Prodam": "10.40.16.106",
+    "IP Liberty": "192.168.49.67",
+    "SGHx": "192.168.49.67_hp_e57540"
+  },
+  {
+    "SETOR": "2 - IMPRESSO Administração",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24CQ6",
+    "IP Prodam": "10.40.16.153",
+    "IP Liberty": "192.168.49.74",
+    "SGHx": "192.168.49.74_samsung_m4020"
+  },
+  {
+    "SETOR": "2 - MEDICINA Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8L0TK",
+    "IP Prodam": "10.40.17.117",
+    "IP Liberty": "192.168.49.68",
+    "SGHx": "192.168.49.75_hp_e52645"
+  },
+  {
+    "SETOR": "2 - OPME Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R07X",
+    "IP Prodam": "10.40.16.100",
+    "IP Liberty": "192.168.49.76",
+    "SGHx": "192.168.49.76_hp_e52645"
+  },
+  {
+    "SETOR": "2 - OUVIDORIA Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0HN",
+    "IP Prodam": "10.40.17.113",
+    "IP Liberty": "192.168.49.77",
+    "SGHx": "192.168.49.77_hp_e52645"
+  },
+  {
+    "SETOR": "2 - PATRIMÔNIO Adminstração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9X003",
+    "IP Prodam": "10.40.17.105",
+    "IP Liberty": "192.168.49.78",
+    "SGHx": "192.168.49.78_hp_e52645"
+  },
+  {
+    "SETOR": "2 - FREQUÊNCIA Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R04K",
+    "IP Prodam": "10.40.16.111",
+    "IP Liberty": "192.168.49.79",
+    "SGHx": "192.168.49.79_hp_e52645"
+  },
+  {
+    "SETOR": "2 - SAD Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R06S",
+    "IP Prodam": "10.40.16.108",
+    "IP Liberty": "192.168.49.80",
+    "SGHx": "192.168.49.80_hp_e52645"
+  },
+  {
+    "SETOR": "2 - SAME Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R081",
+    "IP Prodam": "10.40.17.107",
+    "IP Liberty": "192.168.49.81",
+    "SGHx": "192.168.49.81_hp_e52645"
+  },
+  {
+    "SETOR": "2 - SAME Faturamento",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ7D10K",
+    "IP Prodam": "10.40.16.122",
+    "IP Liberty": "192.168.49.82",
+    "SGHx": "192.168.49.82_hp_e52645"
+  },
+  {
+    "SETOR": "2 - SAME Internação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R051",
+    "IP Prodam": "10.40.16.113",
+    "IP Liberty": "192.168.49.84",
+    "SGHx": "192.168.49.84_hp_e52645"
+  },
+  {
+    "SETOR": "3 - ALOJ. CONJUNTO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R07G",
+    "IP Prodam": "10.40.16.142",
+    "IP Liberty": "192.168.49.87",
+    "SGHx": "192.168.49.87_hp_e52645"
+  },
+  {
+    "SETOR": "3 - ALOJ. CONJUNTO Enfermagem Ala A",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAH50005TT",
+    "IP Prodam": "10.40.16.155",
+    "IP Liberty": "192.168.49.88",
+    "SGHx": "192.168.49.88_samsung_m4020"
+  },
+  {
+    "SETOR": "3 - ALOJ. CONJUNTO Prescrição",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K622VL0A",
+    "IP Prodam": "10.40.17.102",
+    "IP Liberty": "192.168.49.89",
+    "SGHx": "192.168.49.89_samsung_m4020"
+  },
+  {
+    "SETOR": "3 - BANCO DE LEITE Administração",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8P069",
+    "IP Prodam": "10.40.16.116",
+    "IP Liberty": "192.168.49.90",
+    "SGHx": "192.168.49.90_hp_e52645"
+  },
+  {
+    "SETOR": "3 - BERÇÁRIO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R05W",
+    "IP Prodam": "10.40.16.151",
+    "IP Liberty": "192.168.49.91",
+    "SGHx": "192.168.49.91_hp_e52645"
+  },
+  {
+    "SETOR": "3 - BERÇÁRIO Prescrição",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24CJQA",
+    "IP Prodam": "10.40.16.117",
+    "IP Liberty": "192.168.49.92",
+    "SGHx": "192.168.49.92_samsung_m4020"
+  },
+  {
+    "SETOR": "3 - BERÇÁRIO Prescrição UTI",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24CM2A",
+    "IP Prodam": "10.40.17.118",
+    "IP Liberty": "192.168.49.93",
+    "SGHx": "192.168.49.93_samsung_m4020"
+  },
+  {
+    "SETOR": "3 - SERVIÇO SOCIAL Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0M4",
+    "IP Prodam": "10.40.16.114",
+    "IP Liberty": "192.168.49.94",
+    "SGHx": "192.168.49.94_hp_e52645"
+  },
+  {
+    "SETOR": "4 - COT-NEURO Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W0LD",
+    "IP Prodam": "10.40.16.147",
+    "IP Liberty": "192.168.49.95",
+    "SGHx": "192.168.49.95_hp_e52645"
+  },
+  {
+    "SETOR": "4 - COT-NEURO Enfermagem Ala A",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K321NFKA",
+    "IP Prodam": "10.40.16.124",
+    "IP Liberty": "192.168.49.96",
+    "SGHx": "192.168.49.96_samsung_m4020"
+  },
+  {
+    "SETOR": "4 - COT-NEURO Prescrição",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9W06H",
+    "IP Prodam": "10.40.16.125",
+    "IP Liberty": "192.168.49.97",
+    "SGHx": "192.168.49.97_hp_e52645"
+  },
+  {
+    "SETOR": "4 - PEDIATRIA Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R061",
+    "IP Prodam": "10.40.16.136",
+    "IP Liberty": "192.168.49.98",
+    "SGHx": "192.168.49.98_hp_e52645"
+  },
+  {
+    "SETOR": "4 - PEDIATRIA Enfermagem Ala B",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07M34599KM",
+    "IP Prodam": "10.40.17.139",
+    "IP Liberty": "192.168.49.99",
+    "SGHx": "192.168.49.99_samsung_m4020"
+  },
+  {
+    "SETOR": "4 - PEDIATRIA Prescrição UTI",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07M746JA1P",
+    "IP Prodam": "10.40.17.114",
+    "IP Liberty": "192.168.49.100",
+    "SGHx": "192.168.49.100_samsung_m4020"
+  },
+  {
+    "SETOR": "4 - PEDIATRIA Serviço Social",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8Q00K",
+    "IP Prodam": "10.40.16.139",
+    "IP Liberty": "192.168.49.101",
+    "SGHx": "192.168.49.101_hp_e52645"
+  },
+  {
+    "SETOR": "5 - ClÍNICA CIRÚRGICA Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSRBS0NT",
+    "IP Prodam": "10.40.16.150",
+    "IP Liberty": "192.168.49.102",
+    "SGHx": "192.168.49.102_hp_e52645"
+  },
+  {
+    "SETOR": "5 - ClÍNICA CIRÚRGICA Enfermagem Ala A",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAJ800077Y",
+    "IP Prodam": "10.40.17.116",
+    "IP Liberty": "192.168.49.103",
+    "SGHx": "192.168.49.103_samsung_m4020"
+  },
+  {
+    "SETOR": "5 - ClÍNICA CIRÚRGICA Enfermagem Ala B",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07KA24DJ1A",
+    "IP Prodam": "10.40.17.108",
+    "IP Liberty": "192.168.49.104",
+    "SGHx": "192.168.49.104_samsung_m4020"
+  },
+  {
+    "SETOR": "5 - ClÍNICA CIRÚRGICA Prescrição",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R04W",
+    "IP Prodam": "10.40.16.120",
+    "IP Liberty": "192.168.49.105",
+    "SGHx": "192.168.49.105_hp_e52645"
+  },
+  {
+    "SETOR": "5 - CTI Prescrição",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJB07K522PF4A",
+    "IP Prodam": "10.40.17.112",
+    "IP Liberty": "192.168.49.106",
+    "SGHx": "192.168.49.106_samsung_m4020"
+  },
+  {
+    "SETOR": "5 - NEP Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R05P",
+    "IP Prodam": "10.40.17.126",
+    "IP Liberty": "192.168.49.107",
+    "SGHx": "192.168.49.107_hp_e52645"
+  },
+  {
+    "SETOR": "5 - PSICOLOGIA Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9X02F",
+    "IP Prodam": "10.40.16.149",
+    "IP Liberty": "192.168.49.108",
+    "SGHx": "192.168.49.108_hp_e52645"
+  },
+  {
+    "SETOR": "5 - SCIH Coordenação",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8P06V",
+    "IP Prodam": "10.40.16.148",
+    "IP Liberty": "192.168.49.109",
+    "SGHx": "192.168.49.109_hp_e52645"
+  },
+  {
+    "SETOR": "6 - CLÍNICA MÉDICA Enfermagem Ala A",
+    "MODELO": "HP 408dn",
+    "SÉRIE": "BRBST1P02L",
+    "IP Prodam": "10.40.16.172",
+    "IP Liberty": "192.168.49.110",
+    "SGHx": "192.168.49.110_samsung_m4020"
+  },
+  {
+    "SETOR": "6 - CLÍNICA MÉDICA Enfermagem Ala B",
+    "MODELO": "Samsung M4020",
+    "SÉRIE": "ZDEJBQAJ3001J3M",
+    "IP Prodam": "10.40.16.173",
+    "IP Liberty": "192.168.49.111",
+    "SGHx": "192.168.49.111_samsung_m4020"
+  },
+  {
+    "SETOR": "6 - CLÍNICA MÉDICA Prescrição",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R04G",
+    "IP Prodam": "10.40.16.174",
+    "IP Liberty": "192.168.49.112",
+    "SGHx": "192.168.49.112_hp_e52645"
+  },
+  {
+    "SETOR": "6 - CLÍNICA MÉDICA Serviço Social",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9X00G",
+    "IP Prodam": "10.40.16.175",
+    "IP Liberty": "192.168.49.113",
+    "SGHx": "192.168.49.113_hp_e52645"
+  },
+  {
+    "SETOR": "6 - RESIDÊNCIA Enfermagem",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ8L0VL",
+    "IP Prodam": "10.40.16.176",
+    "IP Liberty": "192.168.49.114",
+    "SGHx": "192.168.49.114_hp_e52645"
+  },
+  {
+    "SETOR": "6 - RESIDÊNCIA Prescrição",
+    "MODELO": "HP E52645",
+    "SÉRIE": "BRBSQ9R04C",
+    "IP Prodam": "10.40.16.177",
+    "IP Liberty": "192.168.49.115",
+    "SGHx": "192.168.49.115_hp_e52645"
+  }
+]

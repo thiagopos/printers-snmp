@@ -1,0 +1,10 @@
+{
+  "name": "printer-monitor",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {    
+  },
+  "dependencies": {
+    "net-snmp": "^3.26.1"
+  }
+}
