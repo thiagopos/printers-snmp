@@ -1,2 +1,5 @@
 node_modules/
-*.csv
+data/csv/
+data/db/*.db
+data/db/*.db-shm
+data/db/*.db-wal

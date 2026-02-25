@@ -2,9 +2,19 @@
   "name": "printer-monitor",
   "version": "0.1.0",
   "type": "module",
-  "scripts": {    
+  "scripts": {
+    "start": "node src/index.js",
+    "samsung": "node src/index.js --modelo=samsung",
+    "hp-e52645": "node src/index.js --modelo=hp-e52645",
+    "hp-408dn": "node src/index.js --modelo=hp-408dn",
+    "hp-e57540": "node src/index.js --modelo=hp-e57540",
+    "hp-e87660": "node src/index.js --modelo=hp-e87660",
+    "walker": "node src/walker.js",
+    "seed-precos":  "node src/seed-precos.js",
+    "truncate":     "node src/truncate.js"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "net-snmp": "^3.26.1"
   }
 }

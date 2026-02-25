@@ -1,10 +1,20 @@
 import snmp from 'net-snmp';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { abrirBanco, upsertImpressora, salvarResultado } from './db.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const COMMUNITY = "public";
 
+// ─── Argumento de filtro: --modelo=<chave> ───────────────────────────────────
+// Executa apenas o grupo indicado. Omitir roda todos os grupos.
+// Chaves válidas: samsung | hp-e52645 | hp-408dn | hp-e57540 | hp-e87660
+const args = process.argv.slice(2);
+const filtroModelo = args.find(a => a.startsWith('--modelo='))?.split('=')[1] ?? null;
+
 // ─── Carregar impressoras por modelo ────────────────────────────────────────
-const impressoras  = JSON.parse(fs.readFileSync('./printers.json', 'utf-8'));
+const impressoras  = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/printers.json'), 'utf-8'));
 const samsungM4020 = impressoras.filter(p => p.MODELO === 'Samsung M4020');
 const hpE52645     = impressoras.filter(p => p.MODELO === 'HP E52645');
 const hp408dn      = impressoras.filter(p => p.MODELO === 'HP 408dn');      // testar com OIDs Samsung
@@ -17,8 +27,12 @@ const OID_INFO = '1.3.6.1.2.1.1.1.0';
 // ═══════════════════════════════════════════════════════════════════════════════
 // SAMSUNG M4020 — OIDs
 // ═══════════════════════════════════════════════════════════════════════════════
-const OID_ALERTA        = '1.3.6.1.2.1.43.18.1.1.8.1.1';
-const OID_MENSAGEM_TELA = '1.3.6.1.4.1.236.11.5.1.1.9.20.0';
+const OID_ALERTA           = '1.3.6.1.2.1.43.18.1.1.8.1.1';
+const OID_MENSAGEM_TELA    = '1.3.6.1.4.1.236.11.5.1.1.9.20.0';
+// prtMarkerLifeCount — total de impressões (faces) do dispositivo
+const OID_SAMSUNG_TOTAL_PAG  = '1.3.6.1.2.1.43.10.2.1.4.1.1';
+// Contador proprietário Samsung — total de páginas frente e verso
+const OID_SAMSUNG_DUPLEX_PAG = '1.3.6.1.4.1.236.11.5.11.53.11.2.1.7.1.7';
 
 const NOMES_SAMSUNG = [
   'Cartucho de Toner Preto',   // índice 1
@@ -36,6 +50,7 @@ const OID_SAMSUNG_ATUAL   = NOMES_SAMSUNG.map((_, i) => `1.3.6.1.2.1.43.11.1.1.9
 
 const OIDS_SAMSUNG = [
   OID_INFO, OID_ALERTA, OID_MENSAGEM_TELA,
+  OID_SAMSUNG_TOTAL_PAG, OID_SAMSUNG_DUPLEX_PAG,
   ...OID_SAMSUNG_NOMES, ...OID_SAMSUNG_NOMINAL, ...OID_SAMSUNG_ATUAL,
 ];
 
@@ -205,8 +220,8 @@ function consultarImpressora(impressora) {
     const ip = impressora['IP Liberty'];
 
     const session = snmp.createSession(ip, COMMUNITY, {
-      timeout: 800,
-      retries: 0,
+      timeout: 500,
+      retries: 1,
       version: snmp.Version2c,
     });
 
@@ -271,8 +286,10 @@ function consultarImpressora(impressora) {
         resultado.tonerLastUse  = limparStr(obterValor(OID_HP_TONER_LASTUSE));
         resultado.tonerCapacid  = limparStr(obterValor(OID_HP_TONER_CAPACID));
       } else {
-        resultado.alerta       = obterValor(OID_ALERTA);
-        resultado.mensagemTela = obterValor(OID_MENSAGEM_TELA);
+        resultado.alerta          = obterValor(OID_ALERTA);
+        resultado.mensagemTela    = obterValor(OID_MENSAGEM_TELA);
+        resultado.totalImpresso   = parseInt(obterValor(OID_SAMSUNG_TOTAL_PAG))  || null;
+        resultado.totalDuplex     = parseInt(obterValor(OID_SAMSUNG_DUPLEX_PAG)) || null;
         const _rawSerial = obterValor(OID_SAMSUNG_NOMES[0]);
         resultado.serialToner = _rawSerial?.match(/S\/N:(\S+)/)?.[1] ?? _rawSerial;
       }
@@ -333,6 +350,10 @@ function exibirResultado(resultado) {
     console.log(`  Instalado  : ${formatarData(resultado.tonerInstall)}`);
     console.log(`  Últ. Uso   : ${formatarData(resultado.tonerLastUse)}`);
   } else {
+    const tot = resultado.totalImpresso != null ? resultado.totalImpresso.toLocaleString('pt-BR') : 'N/D';
+    const dup = resultado.totalDuplex   != null ? resultado.totalDuplex.toLocaleString('pt-BR')   : 'N/D';
+    console.log(`  Total Disp.: ${tot}`);
+    console.log(`  F&V Disp.  : ${dup}`);
     console.log(`  Alerta     : ${resultado.alerta       ?? 'Nenhum'}`);
     console.log(`  Mensagem   : ${resultado.mensagemTela ?? 'Não disponível'}`);
     console.log(`  Serial Ton.: ${resultado.serialToner  ?? 'Não disponível'}`);
@@ -369,13 +390,26 @@ function exibirResultado(resultado) {
 async function main() {
   const inicio = Date.now();
 
-  const grupos = [
-    { nome: 'Samsung M4020', lista: samsungM4020 },
-    { nome: 'HP E52645',     lista: hpE52645     },
-    { nome: 'HP 408dn',      lista: hp408dn      },
-    { nome: 'HP E57540 Cor', lista: hpE57540     },
-    { nome: 'HP E87660 A3',  lista: hpE87660     },
+  const db          = abrirBanco();
+  const persistir   = salvarResultado(db);
+
+  const todosGrupos = [
+    { nome: 'Samsung M4020', chave: 'samsung',   lista: samsungM4020 },
+    { nome: 'HP E52645',     chave: 'hp-e52645', lista: hpE52645     },
+    { nome: 'HP 408dn',      chave: 'hp-408dn',  lista: hp408dn      },
+    { nome: 'HP E57540 Cor', chave: 'hp-e57540', lista: hpE57540     },
+    { nome: 'HP E87660 A3',  chave: 'hp-e87660', lista: hpE87660     },
   ];
+
+  const grupos = filtroModelo
+    ? todosGrupos.filter(g => g.chave === filtroModelo)
+    : todosGrupos;
+
+  if (filtroModelo && grupos.length === 0) {
+    const validos = todosGrupos.map(g => g.chave).join(' | ');
+    console.error(`Modelo desconhecido: "${filtroModelo}". Chaves válidas: ${validos}`);
+    process.exit(1);
+  }
 
   let sucesso    = 0;
   let total      = 0;
@@ -389,10 +423,14 @@ async function main() {
     for (const impressora of lista) {
       console.log(`Consultando: ${impressora.SETOR} (${impressora['IP Liberty']})...`);
       try {
-        const resultado = await consultarImpressora(impressora);
+        const resultado     = await consultarImpressora(impressora);
         exibirResultado(resultado);
+        const impressoraId  = upsertImpressora(db, impressora);
+        const snapId        = persistir(impressoraId, resultado);
+        console.log(`  ✔ Snapshot #${snapId} salvo.`);
         sucesso++;
       } catch (err) {
+        // Impressora indisponível ou erro de rede — não grava nada, segue em frente
         falhas.push({ impressora, motivo: err.message });
       }
     }
