@@ -1,0 +1,66 @@
+/* ── Layout geral ─────────────────────────────────────────────────────────── */
+body { font-size: 1.2rem; background: #f4f6f9; }
+
+/* ── Navbar ──────────────────────────────────────────────────────────────── */
+.navbar { box-shadow: 0 1px 4px rgba(0,0,0,.25); min-height: 64px; }
+.navbar-brand { font-size: 1.5rem; letter-spacing: .02em; }
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card { border-radius: 1rem; }
+.card-header { background: transparent; border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem; }
+.card-header h5 { font-size: 1.15rem; }
+.card-body { padding: 1.25rem; }
+.icon-box {
+  width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.icon-box i { font-size: 2.2rem; }
+
+/* ── Rótulos dos cards de resumo ─────────────────────────────────────────── */
+.card-label { font-size: 1rem; color: #6c757d; margin-bottom: .25rem; }
+
+/* ── Tabela de impressoras ────────────────────────────────────────────────── */
+#tabela-impressoras thead th { font-size: 1rem; padding: .9rem .75rem; }
+#tabela-impressoras tbody tr { cursor: pointer; }
+#tabela-impressoras tbody tr:hover { background: #f0f4ff; }
+#tabela-impressoras td { font-size: 1rem; padding: 1rem .75rem; }
+
+/* ── Cabeçalhos ordenáveis ────────────────────────────────────────────────── */
+.th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
+.th-sort i { font-size: .75rem; opacity: .35; margin-left: 5px; transition: opacity .15s; }
+.th-sort:hover i { opacity: .7; }
+.th-sort.th-ativo { color: #3b82f6; }
+.th-sort.th-ativo i { opacity: 1; }
+
+/* ── Badges de toner ─────────────────────────────────────────────────────── */
+.toner-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 1rem; font-weight: 700;
+  padding: 5px 15px; border-radius: 20px;
+  color: #fff; line-height: 1.6;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+.progress { height: 16px; border-radius: 8px; }
+
+/* ── Texto "time ago" ────────────────────────────────────────────────────── */
+.text-ago { color: #adb5bd; font-size: 1rem; }
+
+/* ── Spinner de carga ────────────────────────────────────────────────────── */
+.spinner-overlay {
+  position: fixed; inset: 0; background: rgba(255,255,255,.6);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+
+/* ── Detalhe: imagem da impressora ───────────────────────────────────────── */
+#img-impressora { max-height: 300px; object-fit: contain; }
+
+/* ── Responsividade da tabela ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .col-oculta-mobile { display: none; }
+  body { font-size: 1rem; }
+  .icon-box { width: 60px; height: 60px; }
+  .icon-box i { font-size: 1.6rem; }
+}

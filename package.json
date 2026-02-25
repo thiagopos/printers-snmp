@@ -10,11 +10,15 @@
     "hp-e57540": "node src/index.js --modelo=hp-e57540",
     "hp-e87660": "node src/index.js --modelo=hp-e87660",
     "walker": "node src/walker.js",
-    "seed-precos":  "node src/seed-precos.js",
-    "truncate":     "node src/truncate.js"
+    "seed-precos": "node src/seed-precos.js",
+    "truncate": "node src/truncate.js",
+    "serve": "node src/server.js",
+    "dev":      "node --watch src/server.js",
+    "schedule": "node src/scheduler.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
+    "express": "^5.2.1",
     "net-snmp": "^3.26.1"
   }
 }
