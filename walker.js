@@ -1,7 +1,7 @@
 import snmp from 'net-snmp';
 import fs from 'fs';
 
-const TARGET_IP = "192.168.49.66";
+const TARGET_IP = "192.168.49.59";
 const COMMUNITY  = "public";
 const OUTPUT_CSV = "output.csv";
 

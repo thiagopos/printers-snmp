@@ -8,6 +8,8 @@ const impressoras  = JSON.parse(fs.readFileSync('./printers.json', 'utf-8'));
 const samsungM4020 = impressoras.filter(p => p.MODELO === 'Samsung M4020');
 const hpE52645     = impressoras.filter(p => p.MODELO === 'HP E52645');
 const hp408dn      = impressoras.filter(p => p.MODELO === 'HP 408dn');      // testar com OIDs Samsung
+const hpE57540     = impressoras.filter(p => p.MODELO === 'HP E57540 Cor');
+const hpE87660     = impressoras.filter(p => p.MODELO === 'HP E87660 A3');
 
 // ─── OID comum ───────────────────────────────────────────────────────────────
 const OID_INFO = '1.3.6.1.2.1.1.1.0';
@@ -75,27 +77,142 @@ const OIDS_HP = [
   ...OID_HP_NOMES, ...OID_HP_NOMINAL, ...OID_HP_ATUAL,
 ];
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// HP E57540 Cor — OIDs (4 cartuchos CMYK + fusor + coleta + alimentador)
+// ═══════════════════════════════════════════════════════════════════════════════
+const NOMES_E57540 = [
+  'Toner Preto',              // índice 1 — W9060MC
+  'Toner Ciano',              // índice 2 — W9061MC
+  'Toner Magenta',            // índice 3 — W9063MC
+  'Toner Amarelo',            // índice 4 — W9062MC
+  'Kit do Fusor',             // índice 5
+  'Unidade Coleta Toner',     // índice 6 — nominal=-2, sem percentual
+  'Kit Alimentação Docs.',    // índice 7
+  'Cilindros Alim. Docs.',    // índice 8
+];
+
+const NUM_TONERS_E57540 = 4;  // Preto, Ciano, Magenta, Amarelo
+
+const OID_E57540_NOMES   = NOMES_E57540.map((_, i) => `1.3.6.1.2.1.43.11.1.1.6.1.${i + 1}`);
+const OID_E57540_NOMINAL = NOMES_E57540.map((_, i) => `1.3.6.1.2.1.43.11.1.1.8.1.${i + 1}`);
+const OID_E57540_ATUAL   = NOMES_E57540.map((_, i) => `1.3.6.1.2.1.43.11.1.1.9.1.${i + 1}`);
+
+// Dados por cartucho (N = 1..4 → Preto, Ciano, Magenta, Amarelo)
+const OID_E57540_PN       = Array.from({length: NUM_TONERS_E57540}, (_, i) => `${HP_SUPPLY}.56.${i+1}.0`);
+const OID_E57540_SERIAL   = Array.from({length: NUM_TONERS_E57540}, (_, i) => `${HP_SUPPLY}.3.${i+1}.0`);
+const OID_E57540_IMPRESSO = Array.from({length: NUM_TONERS_E57540}, (_, i) => `${HP_SUPPLY}.12.${i+1}.0`);
+const OID_E57540_INSTALL  = Array.from({length: NUM_TONERS_E57540}, (_, i) => `${HP_SUPPLY}.8.${i+1}.0`);
+const OID_E57540_LASTUSE  = Array.from({length: NUM_TONERS_E57540}, (_, i) => `${HP_SUPPLY}.9.${i+1}.0`);
+const OID_E57540_PAG_REST = Array.from({length: NUM_TONERS_E57540}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.1.${i+1}.0`);
+const OID_E57540_CAPACID  = Array.from({length: NUM_TONERS_E57540}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.4.${i+1}.0`);
+
+const OIDS_E57540 = [
+  OID_INFO, OID_HP_TOTAL_PAG,
+  ...OID_E57540_NOMES, ...OID_E57540_NOMINAL, ...OID_E57540_ATUAL,
+  ...OID_E57540_PN, ...OID_E57540_SERIAL, ...OID_E57540_IMPRESSO,
+  ...OID_E57540_INSTALL, ...OID_E57540_LASTUSE,
+  ...OID_E57540_PAG_REST, ...OID_E57540_CAPACID,
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HP E87660 A3 — OIDs (4 toners + 4 tambores + 4 reveladores + outros)
+// Índices MIB não são sequenciais: 1-19, 23, 24, 25
+// ═══════════════════════════════════════════════════════════════════════════════
+const INDICES_E87660 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 24, 25];
+
+const NOMES_E87660 = [
+  'Toner Preto',               // 1  — W9050MC
+  'Toner Ciano',               // 2  — W9051MC
+  'Toner Magenta',             // 3  — W9053MC
+  'Toner Amarelo',             // 4  — W9052MC
+  'Tambor Preto',              // 5  — W9054MC
+  'Tambor Ciano',              // 6  — W9055MC
+  'Tambor Magenta',            // 7  — W9055MC
+  'Tambor Amarelo',            // 8  — W9055MC
+  'Revelador Preto',           // 9  — Z7Y68A
+  'Revelador Ciano',           // 10 — Z7Y69A
+  'Revelador Magenta',         // 11 — Z7Y72A
+  'Revelador Amarelo',         // 12 — Z7Y73A
+  'Correia Transferência',     // 13 — Z7Y78A
+  'Unidade Limpeza Transf.',   // 14 — Z7Y80A
+  'Roletes Transferência',     // 15 — Z7Y90A
+  'Kit do Fusor',              // 16 — Z7Y75A/76A
+  'Unidade Coleta Toner',      // 17 — W9058MC (nominal=-2, sem percentual)
+  'Rolete Coletor ADF',        // 18 — Z8W50A
+  'Rolete Separador ADF',      // 19 — Z8W51A
+  'Rolo Bandeja 1',            // 23 — Z7Y88A
+  'Rolo Bandeja 2',            // 24 — Z9M01A
+  'Rolo Bandeja 3',            // 25 — Z9M01A
+];
+
+const NUM_TONERS_E87660 = 4;  // Preto, Ciano, Magenta, Amarelo (índices 1–4)
+
+const OID_E87660_NOMES   = INDICES_E87660.map(i => `1.3.6.1.2.1.43.11.1.1.6.1.${i}`);
+const OID_E87660_NOMINAL = INDICES_E87660.map(i => `1.3.6.1.2.1.43.11.1.1.8.1.${i}`);
+const OID_E87660_ATUAL   = INDICES_E87660.map(i => `1.3.6.1.2.1.43.11.1.1.9.1.${i}`);
+
+// Dados por cartucho (N = 1..4 → Preto, Ciano, Magenta, Amarelo)
+const OID_E87660_PN       = Array.from({length: NUM_TONERS_E87660}, (_, i) => `${HP_SUPPLY}.56.${i+1}.0`);
+const OID_E87660_SERIAL   = Array.from({length: NUM_TONERS_E87660}, (_, i) => `${HP_SUPPLY}.3.${i+1}.0`);
+const OID_E87660_IMPRESSO = Array.from({length: NUM_TONERS_E87660}, (_, i) => `${HP_SUPPLY}.12.${i+1}.0`);
+const OID_E87660_INSTALL  = Array.from({length: NUM_TONERS_E87660}, (_, i) => `${HP_SUPPLY}.8.${i+1}.0`);
+const OID_E87660_LASTUSE  = Array.from({length: NUM_TONERS_E87660}, (_, i) => `${HP_SUPPLY}.9.${i+1}.0`);
+const OID_E87660_PAG_REST = Array.from({length: NUM_TONERS_E87660}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.1.${i+1}.0`);
+const OID_E87660_CAPACID  = Array.from({length: NUM_TONERS_E87660}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.4.${i+1}.0`);
+
+const OIDS_E87660 = [
+  OID_INFO, OID_HP_TOTAL_PAG,
+  ...OID_E87660_NOMES, ...OID_E87660_NOMINAL, ...OID_E87660_ATUAL,
+  ...OID_E87660_PN, ...OID_E87660_SERIAL, ...OID_E87660_IMPRESSO,
+  ...OID_E87660_INSTALL, ...OID_E87660_LASTUSE,
+  ...OID_E87660_PAG_REST, ...OID_E87660_CAPACID,
+];
+
+// ─── SNMP GET com batching: evita erro TooBig em requisições grandes ───────────
+function snmpGetChunked(session, oids, chunkSize = 20) {
+  const chunks = [];
+  for (let i = 0; i < oids.length; i += chunkSize) chunks.push(oids.slice(i, i + chunkSize));
+  return chunks.reduce(
+    (p, chunk) => p.then(all => new Promise((ok, fail) =>
+      session.get(chunk, (err, vbs) => err ? fail(err) : ok([...all, ...vbs]))
+    )),
+    Promise.resolve([])
+  );
+}
+
 // ─── Consulta SNMP genérica (detecta modelo automaticamente) ─────────────────
 function consultarImpressora(impressora) {
-  const isHP      = impressora.MODELO === 'HP E52645';  // 408dn usa path Samsung intencionalmente
-  const oids      = isHP ? OIDS_HP      : OIDS_SAMSUNG;
-  const nomesItens = isHP ? NOMES_HP     : NOMES_SAMSUNG;
-  const oidNomes   = isHP ? OID_HP_NOMES   : OID_SAMSUNG_NOMES;
-  const oidNominal = isHP ? OID_HP_NOMINAL : OID_SAMSUNG_NOMINAL;
-  const oidAtual   = isHP ? OID_HP_ATUAL   : OID_SAMSUNG_ATUAL;
+  const isHP        = impressora.MODELO === 'HP E52645';  // 408dn usa path Samsung intencionalmente
+  const isHPColor   = impressora.MODELO === 'HP E57540 Cor';
+  const isHPColorA3 = impressora.MODELO === 'HP E87660 A3';
+
+  let oids, nomesItens, oidNomes, oidNominal, oidAtual;
+  if (isHPColorA3) {
+    oids = OIDS_E87660; nomesItens = NOMES_E87660;
+    oidNomes = OID_E87660_NOMES; oidNominal = OID_E87660_NOMINAL; oidAtual = OID_E87660_ATUAL;
+  } else if (isHPColor) {
+    oids = OIDS_E57540; nomesItens = NOMES_E57540;
+    oidNomes = OID_E57540_NOMES; oidNominal = OID_E57540_NOMINAL; oidAtual = OID_E57540_ATUAL;
+  } else if (isHP) {
+    oids = OIDS_HP; nomesItens = NOMES_HP;
+    oidNomes = OID_HP_NOMES; oidNominal = OID_HP_NOMINAL; oidAtual = OID_HP_ATUAL;
+  } else {
+    oids = OIDS_SAMSUNG; nomesItens = NOMES_SAMSUNG;
+    oidNomes = OID_SAMSUNG_NOMES; oidNominal = OID_SAMSUNG_NOMINAL; oidAtual = OID_SAMSUNG_ATUAL;
+  }
 
   return new Promise((resolve, reject) => {
     const ip = impressora['IP Liberty'];
 
     const session = snmp.createSession(ip, COMMUNITY, {
-      timeout: 1000,
-      retries: 1,
+      timeout: 800,
+      retries: 0,
       version: snmp.Version2c,
     });
 
-    session.get(oids, (err, varbinds) => {
+    snmpGetChunked(session, oids)
+      .then(varbinds => {
       session.close();
-      if (err) return reject(err);
 
       const obterValor = (oid) => {
         const vb = varbinds.find(v => v.oid === oid);
@@ -119,7 +236,31 @@ function consultarImpressora(impressora) {
         itens,
       };
 
-      if (isHP) {
+      if (isHPColorA3) {
+        resultado.totalImpresso = parseInt(obterValor(OID_HP_TOTAL_PAG)) || null;
+        resultado.toners = Array.from({length: NUM_TONERS_E87660}, (_, i) => ({
+          nome:     ['Preto', 'Ciano', 'Magenta', 'Amarelo'][i],
+          pn:       limparStr(obterValor(OID_E87660_PN[i])),
+          serial:   limparStr(obterValor(OID_E87660_SERIAL[i])),
+          impresso: parseInt(obterValor(OID_E87660_IMPRESSO[i])) || null,
+          install:  limparStr(obterValor(OID_E87660_INSTALL[i])),
+          lastUse:  limparStr(obterValor(OID_E87660_LASTUSE[i])),
+          pagRest:  parseInt(obterValor(OID_E87660_PAG_REST[i])) || null,
+          capacid:  parseInt(obterValor(OID_E87660_CAPACID[i])) || null,
+        }));
+      } else if (isHPColor) {
+        resultado.totalImpresso = parseInt(obterValor(OID_HP_TOTAL_PAG)) || null;
+        resultado.toners = Array.from({length: NUM_TONERS_E57540}, (_, i) => ({
+          nome:     ['Preto', 'Ciano', 'Magenta', 'Amarelo'][i],
+          pn:       limparStr(obterValor(OID_E57540_PN[i])),
+          serial:   limparStr(obterValor(OID_E57540_SERIAL[i])),
+          impresso: parseInt(obterValor(OID_E57540_IMPRESSO[i])) || null,
+          install:  limparStr(obterValor(OID_E57540_INSTALL[i])),
+          lastUse:  limparStr(obterValor(OID_E57540_LASTUSE[i])),
+          pagRest:  parseInt(obterValor(OID_E57540_PAG_REST[i])) || null,
+          capacid:  parseInt(obterValor(OID_E57540_CAPACID[i])) || null,
+        }));
+      } else if (isHP) {
         resultado.nomeModelo    = obterValor(OID_HP_NOME_MOD);
         resultado.paginasRest   = parseInt(obterValor(OID_HP_PAG_REST))       || null;
         resultado.totalImpresso = parseInt(obterValor(OID_HP_TOTAL_PAG))      || null;
@@ -132,11 +273,16 @@ function consultarImpressora(impressora) {
       } else {
         resultado.alerta       = obterValor(OID_ALERTA);
         resultado.mensagemTela = obterValor(OID_MENSAGEM_TELA);
-        resultado.serialToner  = obterValor(OID_SAMSUNG_NOMES[0]);
+        const _rawSerial = obterValor(OID_SAMSUNG_NOMES[0]);
+        resultado.serialToner = _rawSerial?.match(/S\/N:(\S+)/)?.[1] ?? _rawSerial;
       }
 
       resolve(resultado);
-    });
+    })
+      .catch(err => {
+        session.close();
+        reject(err);
+      });
   });
 }
 
@@ -160,7 +306,9 @@ function gerarBarra(percentual) {
 
 // ─── Exibição dos resultados no console ─────────────────────────────────────
 function exibirResultado(resultado) {
-  const isHP = resultado.modelo === 'HP E52645';
+  const isHP        = resultado.modelo === 'HP E52645';
+  const isHPColor   = resultado.modelo === 'HP E57540 Cor';
+  const isHPColorA3 = resultado.modelo === 'HP E87660 A3';
 
   console.log('\n' + '═'.repeat(65));
   console.log(`  Setor      : ${resultado.setor}`);
@@ -169,7 +317,10 @@ function exibirResultado(resultado) {
   console.log(`  IP         : ${resultado.ip}`);
   console.log(`  Informação : ${resultado.modeloSerie ?? 'Não disponível'}`);
 
-  if (isHP) {
+  if (isHPColorA3 || isHPColor) {
+    const tot = resultado.totalImpresso != null ? resultado.totalImpresso.toLocaleString('pt-BR') : 'N/D';
+    console.log(`  Total Disp.: ${tot}`);
+  } else if (isHP) {
     const pag  = resultado.paginasRest   != null ? resultado.paginasRest.toLocaleString('pt-BR')   : 'N/D';
     const imp  = resultado.tonerImpresso != null ? resultado.tonerImpresso.toLocaleString('pt-BR') : 'N/D';
     const tot  = resultado.totalImpresso != null ? resultado.totalImpresso.toLocaleString('pt-BR') : 'N/D';
@@ -185,6 +336,21 @@ function exibirResultado(resultado) {
     console.log(`  Alerta     : ${resultado.alerta       ?? 'Nenhum'}`);
     console.log(`  Mensagem   : ${resultado.mensagemTela ?? 'Não disponível'}`);
     console.log(`  Serial Ton.: ${resultado.serialToner  ?? 'Não disponível'}`);
+  }
+
+  if ((isHPColorA3 || isHPColor) && resultado.toners?.length) {
+    console.log('─'.repeat(65));
+    console.log('  Cartuchos de Toner:');
+    for (const t of resultado.toners) {
+      const pag  = t.impresso != null ? t.impresso.toLocaleString('pt-BR') : 'N/D';
+      const rest = t.pagRest  != null ? t.pagRest.toLocaleString('pt-BR')  : 'N/D';
+      const cap  = t.capacid  != null ? t.capacid.toLocaleString('pt-BR')  : 'N/D';
+      console.log(`    ── ${t.nome}`);
+      console.log(`       PN       : ${t.pn      ?? 'N/D'}`);
+      console.log(`       Serial   : ${t.serial  ?? 'N/D'}`);
+      console.log(`       Instalado: ${formatarData(t.install)}   Últ.Uso: ${formatarData(t.lastUse)}`);
+      console.log(`       Pág.Impr.: ${pag.padStart(7)}   Pág.Rest: ${rest.padStart(7)}   Cap: ${cap}`);
+    }
   }
 
   console.log('─'.repeat(65));
@@ -207,6 +373,8 @@ async function main() {
     { nome: 'Samsung M4020', lista: samsungM4020 },
     { nome: 'HP E52645',     lista: hpE52645     },
     { nome: 'HP 408dn',      lista: hp408dn      },
+    { nome: 'HP E57540 Cor', lista: hpE57540     },
+    { nome: 'HP E87660 A3',  lista: hpE87660     },
   ];
 
   let sucesso    = 0;
