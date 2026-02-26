@@ -256,7 +256,10 @@ function renderTabela(impressoras) {
 
   tbody.innerHTML = impressoras.map(imp => {
     const online  = imp.coletado_em?.slice(0, 10) === hoje;
-    const img     = MODELO_IMG[imp.modelo] ?? '';
+    const temErro = imp.status_serie === 'trocada'
+      || !!([imp.alerta, imp.mensagem_tela].filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto').join(''))
+      || imp.consumiveis.some(c => ehTonerPuro(c.nome) && c.percentual === 0);
+    const img     = temErro ? 'img/impressoras/error.png' : (MODELO_IMG[imp.modelo] ?? '');
     const paginas = imp.total_paginas_dispositivo?.toLocaleString('pt-BR') ?? '—';
     const badges  = renderTonerBadges(imp.consumiveis);
     const tempo   = renderTempoEstimado(imp.consumiveis, imp.dias_restantes ?? {});
