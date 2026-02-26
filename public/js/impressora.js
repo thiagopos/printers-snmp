@@ -1,10 +1,10 @@
 // ─── Mapeamento modelo → imagem ───────────────────────────────────────────────
 const MODELO_IMG = {
-  'Samsung M4020': 'img/impressoras/m4020.jpg',
-  'HP E52645':     'img/impressoras/e52645.jpg',
-  'HP 408dn':      'img/impressoras/408dn.jpg',
-  'HP E57540 Cor': 'img/impressoras/e57540.jpg',
-  'HP E87660 A3':  'img/impressoras/e87660.jpg',
+  'Samsung M4020': 'img/impressoras/m4020.png',
+  'HP E52645':     'img/impressoras/e52645.png',
+  'HP 408dn':      'img/impressoras/408dn.png',
+  'HP E57540 Cor': 'img/impressoras/e57540.png',
+  'HP E87660 A3':  'img/impressoras/e87660.png',
 };
 
 // Cores de linha do gráfico por consumível

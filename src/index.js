@@ -220,8 +220,8 @@ function consultarImpressora(impressora) {
     const ip = impressora['IP Liberty'];
 
     const session = snmp.createSession(ip, COMMUNITY, {
-      timeout: 500,
-      retries: 1,
+      timeout: 5000,
+      retries: 3,
       version: snmp.Version2c,
     });
 

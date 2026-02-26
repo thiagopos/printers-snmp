@@ -30,8 +30,16 @@ function calcDiasRestantes(historico, nomeCons) {
 export function criarRotasApi(db) {
   const router = Router();
 
-  // ── GET /api/summary ────────────────────────────────────────────────────────
+  // ── GET /api/summary (?periodo=total|mes|semana  OU  ?de=YYYY-MM-DD&ate=YYYY-MM-DD) ────
   router.get('/summary', (req, res) => {
+    const VALIDOS = ['total', 'mes', 'semana'];
+    const periodo = VALIDOS.includes(req.query.periodo) ? req.query.periodo : null;
+    // Filtro de data livre
+    const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+    const de  = ISO_RE.test(req.query.de  ?? '') ? req.query.de  : null;
+    const ate = ISO_RE.test(req.query.ate ?? '') ? req.query.ate : null;
+    const usandoIntervalo = de && ate;
+
     const total = db.prepare('SELECT COUNT(*) as n FROM impressoras').get().n;
 
     const onlineHoje = db.prepare(`
@@ -50,28 +58,86 @@ export function criarRotasApi(db) {
       JOIN ultimos u ON c.snapshot_id = u.snap_id
       WHERE c.percentual IS NOT NULL
         AND (c.nome LIKE '%Toner%' OR c.nome LIKE '%Cartucho%')
+        AND c.nome NOT LIKE '%Unidade%'
+        AND c.nome NOT LIKE '%Coleta%'
     `).all();
 
     const criticos = niveis.filter(r => r.percentual < 10).length;
     const atencao  = niveis.filter(r => r.percentual >= 10 && r.percentual < 20).length;
     const ok       = niveis.filter(r => r.percentual >= 20).length;
 
-    const topPaginas = db.prepare(`
-      WITH ultimos AS (
-        SELECT impressora_id, MAX(total_paginas_dispositivo) as total
-        FROM snapshots
-        WHERE total_paginas_dispositivo IS NOT NULL
-        GROUP BY impressora_id
-      )
-      SELECT i.setor, SUM(u.total) as total_paginas
-      FROM impressoras i
-      JOIN ultimos u ON u.impressora_id = i.id
-      GROUP BY i.setor
-      ORDER BY total_paginas DESC
-      LIMIT 10
-    `).all();
+    let topPaginas;
 
-    res.json({ total, online_hoje: onlineHoje, criticos, atencao, ok, top_paginas: topPaginas });
+    if (!usandoIntervalo && periodo === 'total') {
+      // Máximo histórico por impressora
+      topPaginas = db.prepare(`
+        WITH ultimos AS (
+          SELECT impressora_id, MAX(total_paginas_dispositivo) as total
+          FROM snapshots
+          WHERE total_paginas_dispositivo IS NOT NULL
+          GROUP BY impressora_id
+        )
+        SELECT i.setor, SUM(u.total) as total_paginas
+        FROM impressoras i
+        JOIN ultimos u ON u.impressora_id = i.id
+        GROUP BY i.setor
+        ORDER BY total_paginas DESC
+        LIMIT 10
+      `).all();
+    } else {
+      // Janela de tempo: período fixo ou intervalo livre
+      let dtInicio, dtFim;
+      if (usandoIntervalo) {
+        dtInicio = de;
+        dtFim    = ate;
+      } else {
+        const dias = (periodo === 'mes') ? 30 : 7;   // default = semana
+        const hoje    = new Date();
+        const inicioD = new Date(hoje); inicioD.setDate(hoje.getDate() - dias);
+        dtFim    = hoje.toISOString().slice(0, 10);
+        dtInicio = inicioD.toISOString().slice(0, 10);
+      }
+
+      topPaginas = db.prepare(`
+        WITH
+        fim AS (
+          SELECT impressora_id, MAX(total_paginas_dispositivo) AS total
+          FROM snapshots
+          WHERE total_paginas_dispositivo IS NOT NULL
+            AND date(coletado_em) <= ?
+            AND date(coletado_em) >= ?
+          GROUP BY impressora_id
+        ),
+        inicio AS (
+          SELECT impressora_id, MAX(total_paginas_dispositivo) AS total
+          FROM snapshots
+          WHERE total_paginas_dispositivo IS NOT NULL
+            AND date(coletado_em) < ?
+          GROUP BY impressora_id
+        ),
+        inicio_fallback AS (
+          SELECT impressora_id, MIN(total_paginas_dispositivo) AS total
+          FROM snapshots
+          WHERE total_paginas_dispositivo IS NOT NULL
+            AND date(coletado_em) >= ?
+            AND date(coletado_em) <= ?
+          GROUP BY impressora_id
+        )
+        SELECT i.setor,
+               SUM(f.total - COALESCE(ini.total, ifb.total)) AS total_paginas
+        FROM impressoras i
+        JOIN fim f             ON f.impressora_id   = i.id
+        LEFT JOIN inicio ini   ON ini.impressora_id = i.id
+        LEFT JOIN inicio_fallback ifb ON ifb.impressora_id = i.id
+        GROUP BY i.setor
+        HAVING total_paginas > 0
+        ORDER BY total_paginas DESC
+        LIMIT 10
+      `).all(dtFim, dtInicio, dtInicio, dtInicio, dtFim);
+    }
+
+    const modoAtivo = usandoIntervalo ? 'intervalo' : (periodo ?? 'semana');
+    res.json({ total, online_hoje: onlineHoje, criticos, atencao, ok, top_paginas: topPaginas, periodo: modoAtivo, de, ate });
   });
 
   // ── GET /api/impressoras ────────────────────────────────────────────────────

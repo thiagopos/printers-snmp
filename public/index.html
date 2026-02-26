@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Monitor de Impressoras</title>
+  <title>Monitor de Impressoras DTI - HMACN</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
@@ -97,8 +97,23 @@
       </div>
       <div class="col-lg-8">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header">
-            <h5 class="mb-0 fw-semibold">Top 10 Setores — Total de Páginas Impressas</h5>
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0 fw-semibold">Top 10 Setores <span class="text-muted fw-normal" id="label-periodo"></span></h5>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-outline-secondary periodo-btn active" data-periodo="semana">Semana</button>
+                <button class="btn btn-outline-secondary periodo-btn" data-periodo="mes">Mês</button>
+                <button class="btn btn-outline-secondary periodo-btn" data-periodo="total">Total</button>
+              </div>
+              <div class="d-flex align-items-center gap-1" id="bloco-intervalo">
+                <input type="date" class="form-control form-control-sm" id="filtro-de"  style="width:145px">
+                <span class="text-muted">até</span>
+                <input type="date" class="form-control form-control-sm" id="filtro-ate" style="width:145px">
+                <button class="btn btn-sm btn-primary" id="btn-aplicar-intervalo">
+                  <i class="bi bi-funnel-fill"></i>
+                </button>
+              </div>
+            </div>
           </div>
           <div class="card-body">
             <canvas id="chart-paginas" style="max-height:380px"></canvas>
@@ -125,11 +140,12 @@
                 <th class="th-sort col-oculta-mobile" data-col="tempo">Tempo estimado <i class="bi bi-arrow-down-up"></i></th>
                 <th class="th-sort col-oculta-mobile" data-col="paginas">Páginas <i class="bi bi-arrow-down-up"></i></th>
                 <th class="th-sort col-oculta-mobile" data-col="quando">Último dado <i class="bi bi-arrow-down-up"></i></th>
-                <th class="th-sort" data-col="status">Status <i class="bi bi-arrow-down-up"></i></th>
+                <th>Status</th>
+                <th>Acesso Web</th>
               </tr>
             </thead>
             <tbody id="tbody-impressoras">
-              <tr><td colspan="7" class="text-center py-5 text-muted">
+              <tr><td colspan="8" class="text-center py-5 text-muted">
                 <div class="spinner-border spinner-border-sm me-2" role="status"></div>Carregando…
               </td></tr>
             </tbody>
@@ -141,6 +157,8 @@
   </div><!-- /container -->
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script>Chart.register(ChartDataLabels);</script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -29,8 +29,9 @@ function log(msg) {
 function iniciarServidor() {
   log('🖥️  Iniciando servidor Express…');
   const srv = spawn('node', ['src/server.js'], {
-    cwd:   ROOT,
-    stdio: 'inherit',
+    cwd:         ROOT,
+    stdio:       'inherit',
+    windowsHide: true,
   });
 
   srv.on('exit', code => {
@@ -43,8 +44,9 @@ function iniciarServidor() {
 function executarColeta() {
   log('📡 Iniciando coleta SNMP (todos os modelos)…');
   const proc = spawn('node', ['src/index.js'], {
-    cwd:   ROOT,
-    stdio: 'inherit',
+    cwd:         ROOT,
+    stdio:       'inherit',
+    windowsHide: true,
   });
   proc.on('exit', code => {
     log(code === 0

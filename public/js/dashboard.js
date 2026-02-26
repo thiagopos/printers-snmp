@@ -1,10 +1,10 @@
 // ─── Mapeamento modelo → imagem ───────────────────────────────────────────────
 const MODELO_IMG = {
-  'Samsung M4020': 'img/impressoras/m4020.jpg',
-  'HP E52645':     'img/impressoras/e52645.jpg',
-  'HP 408dn':      'img/impressoras/408dn.jpg',
-  'HP E57540 Cor': 'img/impressoras/e57540.jpg',
-  'HP E87660 A3':  'img/impressoras/e87660.jpg',
+  'Samsung M4020': 'img/impressoras/m4020.png',
+  'HP E52645':     'img/impressoras/e52645.png',
+  'HP 408dn':      'img/impressoras/408dn.png',
+  'HP E57540 Cor': 'img/impressoras/e57540.png',
+  'HP E87660 A3':  'img/impressoras/e87660.png',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -162,6 +162,34 @@ function aplicarFiltroESort() {
   atualizarHeadersSort();
 }
 
+// ─── Período ativo (persistido por sessão) ────────────────────────────────────────────────
+const LABELS_PERIODO = {
+  total:     '— Páginas totais',
+  mes:       '— Últimos 30 dias',
+  semana:    '— Últimos 7 dias',
+  intervalo: '',            // preenchido dinamicamente
+};
+let periodoAtual   = sessionStorage.getItem('periodo') ?? 'semana';
+let intervaloAtivo = false; // true quando o usuário aplicou datas livres
+
+function labelIntervalo(de, ate) {
+  const fmt = s => s.split('-').reverse().join('/');
+  return `— ${fmt(de)} a ${fmt(ate)}`;
+}
+
+function atualizarBotoesPeriodo(de, ate) {
+  document.querySelectorAll('.periodo-btn').forEach(btn => {
+    btn.classList.toggle('active', !intervaloAtivo && btn.dataset.periodo === periodoAtual);
+  });
+  const el = document.getElementById('label-periodo');
+  if (!el) return;
+  if (intervaloAtivo && de && ate) {
+    el.textContent = labelIntervalo(de, ate);
+  } else {
+    el.textContent = LABELS_PERIODO[periodoAtual] ?? '';
+  }
+}
+
 // ─── Instâncias de Chart ──────────────────────────────────────────────────────
 let chartDonut   = null;
 let chartPaginas = null;
@@ -200,11 +228,24 @@ function renderBarPaginas(top) {
     type: 'bar', data,
     options: {
       indexAxis: 'y',
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#1e40af',
+          font: { size: 13, weight: '700', family: 'system-ui, sans-serif' },
+          backgroundColor: 'rgba(219,234,254,0.85)',
+          borderRadius: 4,
+          padding: { top: 2, bottom: 2, left: 5, right: 5 },
+          formatter: v => v.toLocaleString('pt-BR'),
+        },
+      },
       scales: {
         x: { ticks: { font: { size: 13 } } },
         y: { ticks: { font: { size: 13 } } },
       },
+      layout: { padding: { right: 72 } },
     },
   });
 }
@@ -220,12 +261,21 @@ function renderTabela(impressoras) {
     const badges  = renderTonerBadges(imp.consumiveis);
     const tempo   = renderTempoEstimado(imp.consumiveis, imp.dias_restantes ?? {});
     const quando  = timeAgo(imp.coletado_em);
-    const statusBadge = online
-      ? '<span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Online</span>'
-      : '<span class="badge bg-secondary bg-opacity-10 text-secondary border">Sem dados</span>';
+    const quandoBadge = online
+      ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary"><i class="bi bi-clock-history me-1"></i>${quando}</span>`
+      : `<span class="badge bg-secondary bg-opacity-10 text-secondary border"><i class="bi bi-clock-history me-1"></i>${quando}</span>`;
+
+    const alertaTexto = [imp.alerta, imp.mensagem_tela]
+      .filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto')
+      .join(' | ');
+    const alertaBadge = alertaTexto
+      ? `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Alerta</span>`
+      : '<span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Online</span>';
+
+    const trTitle = alertaTexto ? ` title="${alertaTexto.replace(/"/g, '&quot;')}" style="cursor:help"` : '';
 
     return `
-      <tr onclick="location.href='impressora.html?id=${imp.id}'">
+      <tr onclick="location.href='impressora.html?id=${imp.id}'"${trTitle}>
         <td>
           <div class="d-flex align-items-center gap-2">
             <img src="${img}" alt="${imp.modelo}" width="40" height="40"
@@ -238,16 +288,29 @@ function renderTabela(impressoras) {
         <td>${badges}</td>
         <td class="col-oculta-mobile">${tempo}</td>
         <td class="col-oculta-mobile">${paginas}</td>
-        <td class="col-oculta-mobile text-ago">${quando}</td>
-        <td>${statusBadge}</td>
+        <td class="col-oculta-mobile">${quandoBadge}</td>
+        <td>${alertaBadge}</td>
+        <td onclick="event.stopPropagation()">
+          <a href="http://${imp.ip_liberty}" target="_blank" rel="noopener noreferrer"
+             class="btn btn-sm btn-outline-secondary" title="Abrir página web da impressora">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        </td>
       </tr>`;
   }).join('');
 }
 
 // ─── Carga e atualização ──────────────────────────────────────────────────────
 async function carregarTudo() {
+  let summaryUrl = `/api/summary?periodo=${periodoAtual}`;
+  if (intervaloAtivo) {
+    const de  = document.getElementById('filtro-de').value;
+    const ate = document.getElementById('filtro-ate').value;
+    if (de && ate) summaryUrl = `/api/summary?de=${de}&ate=${ate}`;
+  }
+
   const [summary, impressoras] = await Promise.all([
-    fetch('/api/summary').then(r => r.json()),
+    fetch(summaryUrl).then(r => r.json()),
     fetch('/api/impressoras').then(r => r.json()),
   ]);
 
@@ -256,6 +319,7 @@ async function carregarTudo() {
   renderCards(summary);
   renderDonut(summary);
   renderBarPaginas(summary.top_paginas);
+  atualizarBotoesPeriodo(summary.de, summary.ate);
   aplicarFiltroESort();
 
   document.getElementById('ultima-atualizacao').textContent =
@@ -274,6 +338,29 @@ document.querySelectorAll('.th-sort').forEach(th => {
     sessionStorage.setItem('sortDir', sortDir);
     aplicarFiltroESort();
   });
+});
+
+// ─── Seletor de período ────────────────────────────────────────────────────────
+document.querySelectorAll('.periodo-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!intervaloAtivo && btn.dataset.periodo === periodoAtual) return;
+    periodoAtual   = btn.dataset.periodo;
+    intervaloAtivo = false;
+    sessionStorage.setItem('periodo', periodoAtual);
+    if (chartPaginas) { chartPaginas.destroy(); chartPaginas = null; }
+    carregarTudo();
+  });
+});
+
+// ─── Filtro de intervalo livre ───────────────────────────────────────────────
+document.getElementById('btn-aplicar-intervalo')?.addEventListener('click', () => {
+  const de  = document.getElementById('filtro-de').value;
+  const ate = document.getElementById('filtro-ate').value;
+  if (!de || !ate) return;
+  if (de > ate) { alert('A data de início deve ser anterior à data de fim.'); return; }
+  intervaloAtivo = true;
+  if (chartPaginas) { chartPaginas.destroy(); chartPaginas = null; }
+  carregarTudo();
 });
 
 // ─── Botão de atualizar ──────────────────────────────────────────────────────
