@@ -246,6 +246,20 @@ export function criarRotasApi(db) {
     const impressora = db.prepare('SELECT * FROM impressoras WHERE id = ?').get(id);
     if (!impressora) return res.status(404).json({ erro: 'Não encontrada' });
 
+    // ── Detecção de backup / impressora trocada ──────────────────────────────
+    const esperadaSingle = expectedSerial.get(impressora.ip_liberty) ?? null;
+    const atualSingle    = impressora.serie_snmp ?? null;
+    let status_serie = 'ok';
+    let serie_info   = { esperada: esperadaSingle, atual: atualSingle };
+    if (esperadaSingle && atualSingle && atualSingle !== esperadaSingle) {
+      if (backupMap.has(atualSingle)) {
+        status_serie = 'backup';
+        serie_info.backup_nome = backupMap.get(atualSingle);
+      } else {
+        status_serie = 'trocada';
+      }
+    }
+
     const snaps = db.prepare(`
       SELECT id, coletado_em, total_paginas_dispositivo, total_duplex, alerta, mensagem_tela
       FROM snapshots
@@ -279,7 +293,13 @@ export function criarRotasApi(db) {
       }
     }
 
-    res.json({ impressora, historico, dias_restantes: diasRestantes, cartuchos });
+    const trocas = db.prepare(`
+      SELECT * FROM trocas_insumo
+      WHERE impressora_id = ?
+      ORDER BY ocorrido_em DESC
+    `).all(id);
+
+    res.json({ impressora, historico, dias_restantes: diasRestantes, cartuchos, status_serie, serie_info, trocas });
   });
 
   return router;

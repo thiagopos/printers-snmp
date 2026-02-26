@@ -66,15 +66,35 @@ async function carregar() {
   const data = await fetch(`/api/impressora/${id}`).then(r => r.json());
   if (data.erro) { alert(data.erro); location.href = '/'; return; }
 
-  const { impressora, historico, dias_restantes, cartuchos } = data;
+  const { impressora, historico, dias_restantes, cartuchos, status_serie, serie_info, trocas } = data;
 
   // Título e imagem
   document.title = `${impressora.modelo} — ${impressora.setor}`;
   document.getElementById('nav-titulo').textContent = impressora.modelo;
-  document.getElementById('img-impressora').src = MODELO_IMG[impressora.modelo] ?? '';
+
+  const ultimo = historico.at(-1);
+
+  function ehTonerPuro(nome) {
+    const n = nome.toLowerCase();
+    return (n.includes('toner') || n.includes('cartucho')) && !n.includes('unidade') && !n.includes('coleta');
+  }
+
+  const temErro = status_serie === 'trocada'
+    || !!([ultimo?.alerta, ultimo?.mensagem_tela]
+        .filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto')
+        .join(''))
+    || (ultimo?.consumiveis ?? []).some(c => ehTonerPuro(c.nome) && c.percentual === 0);
+
+  const imgSrc = temErro ? 'img/impressoras/error.png' : (MODELO_IMG[impressora.modelo] ?? '');
+  document.getElementById('img-impressora').src = imgSrc;
+
+  // Lupa: abre modal com imagem ampliada
+  document.getElementById('btn-zoom-img').addEventListener('click', () => {
+    document.getElementById('modal-zoom-img').src = imgSrc;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-img-zoom')).show();
+  });
 
   // ── Info: campos dinâmicos ──────────────────────────────────────────────────
-  const ultimo = historico.at(-1);
   const campos = [
     ['Setor',         impressora.setor],
     ['Modelo',        impressora.modelo],
@@ -192,6 +212,27 @@ async function carregar() {
       </tr>`).join('');
   } else {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Nenhum histórico de cartucho disponível.</td></tr>';
+  }
+
+  // ── Histórico de trocas ────────────────────────────────────────────────────
+  const tbodyTrocas = document.getElementById('tbody-trocas');
+  if (trocas?.length) {
+    tbodyTrocas.innerHTML = trocas.map(t => {
+      const serial = t.serial_anterior ?? t.pn_anterior ?? '—';
+      const serialNovo = t.serial_novo ?? t.pn_novo ?? '—';
+      const pctAntes   = t.percentual_antes  != null ? `<span class="text-${t.percentual_antes  < 10 ? 'danger' : t.percentual_antes  < 20 ? 'warning' : 'secondary'}">${t.percentual_antes}%</span>` : '—';
+      const pctDepois  = t.percentual_depois != null ? `<span class="text-${t.percentual_depois < 10 ? 'danger' : t.percentual_depois < 20 ? 'warning' : 'success'}">${t.percentual_depois}%</span>` : '—';
+      return `
+        <tr>
+          <td class="text-muted small">${formatarDataHora(t.ocorrido_em)}</td>
+          <td class="fw-medium">${t.nome}</td>
+          <td><code class="text-danger small">${serial}</code></td>
+          <td><code class="text-success small">${serialNovo}</code></td>
+          <td>${pctAntes}</td>
+          <td>${pctDepois}</td>
+          <td>${t.paginas_anterior?.toLocaleString('pt-BR') ?? '—'}</td>
+        </tr>`;
+    }).join('');
   }
 }
 

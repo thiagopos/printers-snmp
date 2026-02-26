@@ -282,7 +282,7 @@
   {
     "SETOR": "0 - PS Prescrição",
     "MODELO": "Samsung M4020",
-    "SÉRIE": "ZEQYBQAG70000M",
+    "SÉRIE": "ZEQYBQAG70000MM",
     "IP Prodam": "10.40.17.123",
     "IP Liberty": "192.168.49.40",
     "SGHx": "192.168.49.40_samsung_m4020"
@@ -378,7 +378,7 @@
   {
     "SETOR": "1 - CENTRO OBSTRÉTICO Enf. Corredor",
     "MODELO": "Samsung M4020",
-    "SÉRIE": "ZDEJB07JC10TJ0",
+    "SÉRIE": "ZDEJB07JC10TJ0F",
     "IP Prodam": "10.40.16.180",
     "IP Liberty": "192.168.49.6",
     "SGHx": "192.168.49.6_samsung_m4020"
@@ -514,7 +514,7 @@
   {
     "SETOR": "2 - IMPRESSO Administração",
     "MODELO": "Samsung M4020",
-    "SÉRIE": "ZDEJB07KA24CQ6",
+    "SÉRIE": "ZDEJB07KA24CQ6A",
     "IP Prodam": "10.40.16.153",
     "IP Liberty": "192.168.49.74",
     "SGHx": "192.168.49.74_samsung_m4020"

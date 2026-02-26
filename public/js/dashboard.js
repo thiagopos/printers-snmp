@@ -124,6 +124,20 @@ function tempoEstimadoDias(consumiveis, diasRestantes) {
   return vals.length ? Math.min(...vals) : 9999;
 }
 
+function pesoStatus(imp, hoje) {
+  // Menor peso = aparece primeiro quando dir=1 (ascendente)
+  // 0 = trocada  1 = backup  2 = offline  3 = alerta  4 = online
+  if (imp.status_serie === 'trocada') return 0;
+  if (imp.status_serie === 'backup')  return 1;
+  const online = imp.coletado_em?.slice(0, 10) === hoje;
+  if (!online)                        return 2;
+  const temAlertaOuZero = !!([imp.alerta, imp.mensagem_tela]
+    .filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto').join(''))
+    || imp.consumiveis.some(c => ehTonerPuro(c.nome) && c.percentual === 0);
+  if (temAlertaOuZero)                return 3;
+  return 4;
+}
+
 function sortarImpressoras(lista) {
   if (!sortCol) return lista;
   return [...lista].sort((a, b) => {
@@ -134,7 +148,10 @@ function sortarImpressoras(lista) {
       case 'tempo':   return sortDir * (tempoEstimadoDias(a.consumiveis, a.dias_restantes ?? {}) - tempoEstimadoDias(b.consumiveis, b.dias_restantes ?? {}));
       case 'paginas': return sortDir * ((a.total_paginas_dispositivo ?? -1) - (b.total_paginas_dispositivo ?? -1));
       case 'quando':  return sortDir * ((a.coletado_em ?? '').localeCompare(b.coletado_em ?? ''));
-      case 'status':  return sortDir * ((a.coletado_em ? 0 : 1) - (b.coletado_em ? 0 : 1));
+      case 'status': {
+        const hoje = new Date().toISOString().slice(0, 10);
+        return sortDir * (pesoStatus(a, hoje) - pesoStatus(b, hoje));
+      }
       default: return 0;
     }
   });
@@ -156,7 +173,7 @@ function aplicarFiltroESort() {
   const q = document.getElementById('filtro').value.toLowerCase();
   let lista = dadosImpressoras;
   if (q) lista = lista.filter(imp =>
-    (imp.modelo + ' ' + imp.setor).toLowerCase().includes(q)
+    (imp.modelo + ' ' + imp.setor + ' ' + (imp.serie_snmp ?? '')).toLowerCase().includes(q)
   );
   renderTabela(sortarImpressoras(lista));
   atualizarHeadersSort();
@@ -287,7 +304,12 @@ function renderTabela(impressoras) {
         const esper = imp.serie_info?.esperada ?? '?';
         return `<span class="badge-serie-trocada" title="S/N atual: ${atual} — esperado: ${esper}"><i class="bi bi-exclamation-diamond-fill me-1"></i>Trocada</span>`;
       }
-      return alertaTexto
+      if (!online) {
+        return '<span class="badge bg-secondary bg-opacity-10 text-secondary border"><i class="bi bi-wifi-off me-1"></i>Offline</span>';
+      }
+      const temAlertaOuZero = alertaTexto
+        || imp.consumiveis.some(c => ehTonerPuro(c.nome) && c.percentual === 0);
+      return temAlertaOuZero
         ? `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Alerta</span>`
         : '<span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Online</span>';
     })();
@@ -302,6 +324,7 @@ function renderTabela(impressoras) {
             <span class="fw-medium">${imp.modelo}</span>
           </div>
         </td>
+        <td class="text-muted font-monospace" style="font-size:.8rem">${imp.serie_snmp ?? '—'}</td>
         <td class="text-muted">${imp.setor}</td>
         <td>${badges}</td>
         <td class="col-oculta-mobile">${tempo}</td>

@@ -66,10 +66,26 @@ export function abrirBanco() {
       atualizado_em TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
     );
 
+    -- ── Registro de trocas de insumos (detectado automaticamente) ──────────────
+    CREATE TABLE IF NOT EXISTS trocas_insumo (
+      id                INTEGER PRIMARY KEY AUTOINCREMENT,
+      impressora_id     INTEGER NOT NULL REFERENCES impressoras(id),
+      nome              TEXT    NOT NULL,  -- ex: "Toner Preto", "Cartucho de Toner Preto"
+      serial_anterior   TEXT,
+      serial_novo       TEXT,
+      pn_anterior       TEXT,
+      pn_novo           TEXT,
+      percentual_antes  INTEGER,           -- % no último snapshot do cartucho que saiu
+      percentual_depois INTEGER,           -- % no snapshot que detectou a troca
+      paginas_anterior  INTEGER,           -- páginas impressas com o cartucho que saiu
+      ocorrido_em       TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+    );
+
     -- ── Índices para as queries mais frequentes ────────────────────────────────
     CREATE INDEX IF NOT EXISTS idx_snap_impressora  ON snapshots(impressora_id, coletado_em);
     CREATE INDEX IF NOT EXISTS idx_cons_snapshot    ON consumiveis_snapshot(snapshot_id);
     CREATE INDEX IF NOT EXISTS idx_cons_serial      ON consumiveis_snapshot(toner_serial) WHERE toner_serial IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_trocas_impressora ON trocas_insumo(impressora_id, ocorrido_em);
   `);
 
   // ─── Migration: adiciona serie_snmp em bancos existentes ──────────────────
@@ -125,6 +141,26 @@ export const salvarResultado = (db) => {
       (impressora_id, total_paginas_dispositivo, total_duplex, alerta, mensagem_tela)
     VALUES
       (@impressora_id, @total_paginas_dispositivo, @total_duplex, @alerta, @mensagem_tela)
+  `);
+
+  // Último estado conhecido do consumível que tenha algum identificador
+  const selectUltimoSerial = db.prepare(`
+    SELECT cs.toner_serial, cs.toner_pn, cs.percentual, cs.paginas_cartucho
+    FROM consumiveis_snapshot cs
+    JOIN snapshots s ON cs.snapshot_id = s.id
+    WHERE s.impressora_id = ? AND cs.nome = ?
+      AND (cs.toner_serial IS NOT NULL OR cs.toner_pn IS NOT NULL)
+    ORDER BY s.coletado_em DESC
+    LIMIT 1
+  `);
+
+  const insertTroca = db.prepare(`
+    INSERT INTO trocas_insumo
+      (impressora_id, nome, serial_anterior, serial_novo,
+       pn_anterior, pn_novo, percentual_antes, percentual_depois, paginas_anterior)
+    VALUES
+      (@impressora_id, @nome, @serial_anterior, @serial_novo,
+       @pn_anterior, @pn_novo, @percentual_antes, @percentual_depois, @paginas_anterior)
   `);
 
   const insertCons = db.prepare(`
@@ -190,6 +226,26 @@ export const salvarResultado = (db) => {
       } else if (isSamsung && éToner) {
         // Samsung — só tem serial (extraído via regex do campo nome MIB)
         serial = resultado.serialToner ?? null;
+      }
+
+      // ── Detectar troca de insumo ─────────────────────────────────────────────
+      const identNovo = serial ?? pn;
+      if (identNovo) {
+        const ult = selectUltimoSerial.get(impressoraId, item.nome);
+        const identAnt = ult?.toner_serial ?? ult?.toner_pn ?? null;
+        if (ult && identAnt && identAnt !== identNovo) {
+          insertTroca.run({
+            impressora_id:    impressoraId,
+            nome:             item.nome,
+            serial_anterior:  ult.toner_serial ?? null,
+            serial_novo:      serial,
+            pn_anterior:      ult.toner_pn ?? null,
+            pn_novo:          pn,
+            percentual_antes: ult.percentual ?? null,
+            percentual_depois: item.percentual ?? null,
+            paginas_anterior: ult.paginas_cartucho ?? null,
+          });
+        }
       }
 
       insertCons.run({

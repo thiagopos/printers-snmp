@@ -127,7 +127,7 @@
       <div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
         <h5 class="mb-0 fw-semibold">Impressoras</h5>
         <input type="search" class="form-control"
-               style="max-width:320px" id="filtro" placeholder="🔍 Filtrar setor ou modelo…">
+               style="max-width:320px" id="filtro" placeholder="🔍 Filtrar modelo, setor ou S/N…">
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -135,17 +135,18 @@
             <thead class="table-light">
               <tr>
                 <th class="th-sort" data-col="modelo">Impressora <i class="bi bi-arrow-down-up"></i></th>
+                <th>S/N</th>
                 <th class="th-sort" data-col="setor">Setor <i class="bi bi-arrow-down-up"></i></th>
                 <th class="th-sort" data-col="toner">Toner(s) <i class="bi bi-arrow-down-up"></i></th>
                 <th class="th-sort col-oculta-mobile" data-col="tempo">Tempo estimado <i class="bi bi-arrow-down-up"></i></th>
                 <th class="th-sort col-oculta-mobile" data-col="paginas">Páginas <i class="bi bi-arrow-down-up"></i></th>
                 <th class="th-sort col-oculta-mobile" data-col="quando">Último dado <i class="bi bi-arrow-down-up"></i></th>
-                <th>Status</th>
+                <th class="th-sort" data-col="status">Status <i class="bi bi-arrow-down-up"></i></th>
                 <th>Acesso Web</th>
               </tr>
             </thead>
             <tbody id="tbody-impressoras">
-              <tr><td colspan="8" class="text-center py-5 text-muted">
+              <tr><td colspan="9" class="text-center py-5 text-muted">
                 <div class="spinner-border spinner-border-sm me-2" role="status"></div>Carregando…
               </td></tr>
             </tbody>
