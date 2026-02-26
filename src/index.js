@@ -22,7 +22,8 @@ const hpE57540     = impressoras.filter(p => p.MODELO === 'HP E57540 Cor');
 const hpE87660     = impressoras.filter(p => p.MODELO === 'HP E87660 A3');
 
 // ─── OID comum ───────────────────────────────────────────────────────────────
-const OID_INFO = '1.3.6.1.2.1.1.1.0';
+const OID_INFO          = '1.3.6.1.2.1.1.1.0';
+const OID_DEVICE_SERIAL = '1.3.6.1.2.1.43.5.1.1.17.1'; // prtGeneralSerialNumber (padrão MIB)
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SAMSUNG M4020 — OIDs
@@ -49,7 +50,7 @@ const OID_SAMSUNG_NOMINAL = NOMES_SAMSUNG.map((_, i) => `1.3.6.1.2.1.43.11.1.1.8
 const OID_SAMSUNG_ATUAL   = NOMES_SAMSUNG.map((_, i) => `1.3.6.1.2.1.43.11.1.1.9.1.${i + 1}`);
 
 const OIDS_SAMSUNG = [
-  OID_INFO, OID_ALERTA, OID_MENSAGEM_TELA,
+  OID_INFO, OID_DEVICE_SERIAL, OID_ALERTA, OID_MENSAGEM_TELA,
   OID_SAMSUNG_TOTAL_PAG, OID_SAMSUNG_DUPLEX_PAG,
   ...OID_SAMSUNG_NOMES, ...OID_SAMSUNG_NOMINAL, ...OID_SAMSUNG_ATUAL,
 ];
@@ -86,7 +87,7 @@ const OID_HP_NOMINAL = NOMES_HP.map((_, i) => `1.3.6.1.2.1.43.11.1.1.8.1.${i + 1
 const OID_HP_ATUAL   = NOMES_HP.map((_, i) => `1.3.6.1.2.1.43.11.1.1.9.1.${i + 1}`);
 
 const OIDS_HP = [
-  OID_INFO, OID_HP_NOME_MOD, OID_HP_PAG_REST, OID_HP_TOTAL_PAG,
+  OID_INFO, OID_DEVICE_SERIAL, OID_HP_NOME_MOD, OID_HP_PAG_REST, OID_HP_TOTAL_PAG,
   OID_HP_TONER_PN, OID_HP_TONER_SERIAL, OID_HP_TONER_IMPRESSO,
   OID_HP_TONER_INSTALL, OID_HP_TONER_LASTUSE, OID_HP_TONER_CAPACID,
   ...OID_HP_NOMES, ...OID_HP_NOMINAL, ...OID_HP_ATUAL,
@@ -122,7 +123,7 @@ const OID_E57540_PAG_REST = Array.from({length: NUM_TONERS_E57540}, (_, i) => `1
 const OID_E57540_CAPACID  = Array.from({length: NUM_TONERS_E57540}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.4.${i+1}.0`);
 
 const OIDS_E57540 = [
-  OID_INFO, OID_HP_TOTAL_PAG,
+  OID_INFO, OID_DEVICE_SERIAL, OID_HP_TOTAL_PAG,
   ...OID_E57540_NOMES, ...OID_E57540_NOMINAL, ...OID_E57540_ATUAL,
   ...OID_E57540_PN, ...OID_E57540_SERIAL, ...OID_E57540_IMPRESSO,
   ...OID_E57540_INSTALL, ...OID_E57540_LASTUSE,
@@ -176,7 +177,7 @@ const OID_E87660_PAG_REST = Array.from({length: NUM_TONERS_E87660}, (_, i) => `1
 const OID_E87660_CAPACID  = Array.from({length: NUM_TONERS_E87660}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.4.${i+1}.0`);
 
 const OIDS_E87660 = [
-  OID_INFO, OID_HP_TOTAL_PAG,
+  OID_INFO, OID_DEVICE_SERIAL, OID_HP_TOTAL_PAG,
   ...OID_E87660_NOMES, ...OID_E87660_NOMINAL, ...OID_E87660_ATUAL,
   ...OID_E87660_PN, ...OID_E87660_SERIAL, ...OID_E87660_IMPRESSO,
   ...OID_E87660_INSTALL, ...OID_E87660_LASTUSE,
@@ -294,6 +295,7 @@ function consultarImpressora(impressora) {
         resultado.serialToner = _rawSerial?.match(/S\/N:(\S+)/)?.[1] ?? _rawSerial;
       }
 
+      resultado.serieDispositivo = obterValor(OID_DEVICE_SERIAL)?.trim().replace(/[^A-Za-z0-9]+$/, '') ?? null;
       resolve(resultado);
     })
       .catch(err => {
@@ -331,6 +333,7 @@ function exibirResultado(resultado) {
   console.log(`  Setor      : ${resultado.setor}`);
   console.log(`  Modelo     : ${resultado.modelo}`);
   console.log(`  Série      : ${resultado.serie}`);
+  console.log(`  Série Disp.: ${resultado.serieDispositivo ?? 'N/D'}${resultado.serieDispositivo && resultado.serieDispositivo !== resultado.serie ? ' ⚠ DIVERGE' : ''}`);
   console.log(`  IP         : ${resultado.ip}`);
   console.log(`  Informação : ${resultado.modeloSerie ?? 'Não disponível'}`);
 
@@ -425,7 +428,7 @@ async function main() {
       try {
         const resultado     = await consultarImpressora(impressora);
         exibirResultado(resultado);
-        const impressoraId  = upsertImpressora(db, impressora);
+        const impressoraId  = upsertImpressora(db, impressora, resultado.serieDispositivo ?? null);
         const snapId        = persistir(impressoraId, resultado);
         console.log(`  ✔ Snapshot #${snapId} salvo.`);
         sucesso++;

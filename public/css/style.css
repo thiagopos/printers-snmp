@@ -64,3 +64,21 @@ body { font-size: 1.2rem; background: #f4f6f9; }
   .icon-box { width: 60px; height: 60px; }
   .icon-box i { font-size: 1.6rem; }
 }
+
+/* ── Badge série backup / trocada ────────────────────────────────────────── */
+.badge-serie-backup {
+  display: inline-flex; align-items: center;
+  font-size: .78rem; font-weight: 600;
+  padding: 3px 8px; border-radius: 20px;
+  color: #6c757d; background: rgba(108,117,125,0.07);
+  border: 1px dashed #adb5bd; cursor: default;
+  white-space: nowrap;
+}
+.badge-serie-trocada {
+  display: inline-flex; align-items: center;
+  font-size: .78rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 20px;
+  color: #92400e; background: rgba(245,158,11,0.12);
+  border: 1px solid #f59e0b; cursor: default;
+  white-space: nowrap;
+}

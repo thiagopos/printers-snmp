@@ -268,11 +268,26 @@ function renderTabela(impressoras) {
     const alertaTexto = [imp.alerta, imp.mensagem_tela]
       .filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto')
       .join(' | ');
-    const alertaBadge = alertaTexto
-      ? `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Alerta</span>`
-      : '<span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Online</span>';
 
     const trTitle = alertaTexto ? ` title="${alertaTexto.replace(/"/g, '&quot;')}" style="cursor:help"` : '';
+
+    const statusBadge = (() => {
+      const s = imp.status_serie;
+      if (s === 'backup') {
+        const nome  = imp.serie_info?.backup_nome ?? '';
+        const atual = imp.serie_info?.atual ?? '?';
+        const title = (nome ? `${nome} — ` : '') + `S/N: ${atual}`;
+        return `<span class="badge-serie-backup" title="${title}"><i class="bi bi-arrow-repeat me-1"></i>Backup</span>`;
+      }
+      if (s === 'trocada') {
+        const atual = imp.serie_info?.atual ?? '?';
+        const esper = imp.serie_info?.esperada ?? '?';
+        return `<span class="badge-serie-trocada" title="S/N atual: ${atual} — esperado: ${esper}"><i class="bi bi-exclamation-diamond-fill me-1"></i>Trocada</span>`;
+      }
+      return alertaTexto
+        ? `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Alerta</span>`
+        : '<span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Online</span>';
+    })();
 
     return `
       <tr onclick="location.href='impressora.html?id=${imp.id}'"${trTitle}>
@@ -289,7 +304,7 @@ function renderTabela(impressoras) {
         <td class="col-oculta-mobile">${tempo}</td>
         <td class="col-oculta-mobile">${paginas}</td>
         <td class="col-oculta-mobile">${quandoBadge}</td>
-        <td>${alertaBadge}</td>
+        <td>${statusBadge}</td>
         <td onclick="event.stopPropagation()">
           <a href="http://${imp.ip_liberty}" target="_blank" rel="noopener noreferrer"
              class="btn btn-sm btn-outline-secondary" title="Abrir página web da impressora">

@@ -6,3 +6,109 @@
 26/02/2026 09:03:40: (Use `node --trace-deprecation ...` to show where the warning was created)
 26/02/2026 09:17:11: (node:7568) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
 26/02/2026 09:17:11: (Use `node --trace-deprecation ...` to show where the warning was created)
+26/02/2026 09:28:13: (node:18424) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+26/02/2026 09:28:13: (Use `node --trace-deprecation ...` to show where the warning was created)
+26/02/2026 10:20:35: (node:24788) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+26/02/2026 10:20:35: (Use `node --trace-deprecation ...` to show where the warning was created)
+26/02/2026 10:20:35: node:fs:440
+26/02/2026 10:20:35:     return binding.readFileUtf8(path, stringToFlags(options.flag));
+26/02/2026 10:20:35:                    ^
+26/02/2026 10:20:35: 
+26/02/2026 10:20:35: Error: ENOENT: no such file or directory, open 'C:\Users\x344942\Documents\code\FASE5\print\src\data\printers.json'
+26/02/2026 10:20:35:     at Object.readFileSync (node:fs:440:20)
+26/02/2026 10:20:35:     at file:///C:/Users/x344942/Documents/code/FASE5/print/src/routes/api.js:8:38
+26/02/2026 10:20:35:     at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+26/02/2026 10:20:35:     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)
+26/02/2026 10:20:35:     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+26/02/2026 10:20:35:   errno: -4058,
+26/02/2026 10:20:35:   code: 'ENOENT',
+26/02/2026 10:20:35:   syscall: 'open',
+26/02/2026 10:20:35:   path: 'C:\\Users\\x344942\\Documents\\code\\FASE5\\print\\src\\data\\printers.json'
+26/02/2026 10:20:35: }
+26/02/2026 10:20:35: 
+26/02/2026 10:20:35: Node.js v24.7.0
+26/02/2026 10:20:41: node:fs:440
+26/02/2026 10:20:41:     return binding.readFileUtf8(path, stringToFlags(options.flag));
+26/02/2026 10:20:41:                    ^
+26/02/2026 10:20:41: 
+26/02/2026 10:20:41: Error: ENOENT: no such file or directory, open 'C:\Users\x344942\Documents\code\FASE5\print\src\data\printers.json'
+26/02/2026 10:20:41:     at Object.readFileSync (node:fs:440:20)
+26/02/2026 10:20:41:     at file:///C:/Users/x344942/Documents/code/FASE5/print/src/routes/api.js:8:38
+26/02/2026 10:20:41:     at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+26/02/2026 10:20:41:     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)
+26/02/2026 10:20:41:     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+26/02/2026 10:20:41:   errno: -4058,
+26/02/2026 10:20:41:   code: 'ENOENT',
+26/02/2026 10:20:41:   syscall: 'open',
+26/02/2026 10:20:41:   path: 'C:\\Users\\x344942\\Documents\\code\\FASE5\\print\\src\\data\\printers.json'
+26/02/2026 10:20:41: }
+26/02/2026 10:20:41: 
+26/02/2026 10:20:41: Node.js v24.7.0
+26/02/2026 10:20:46: node:fs:440
+26/02/2026 10:20:46:     return binding.readFileUtf8(path, stringToFlags(options.flag));
+26/02/2026 10:20:46:                    ^
+26/02/2026 10:20:46: 
+26/02/2026 10:20:46: Error: ENOENT: no such file or directory, open 'C:\Users\x344942\Documents\code\FASE5\print\src\data\printers.json'
+26/02/2026 10:20:46:     at Object.readFileSync (node:fs:440:20)
+26/02/2026 10:20:46:     at file:///C:/Users/x344942/Documents/code/FASE5/print/src/routes/api.js:8:38
+26/02/2026 10:20:46:     at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+26/02/2026 10:20:46:     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)
+26/02/2026 10:20:46:     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+26/02/2026 10:20:46:   errno: -4058,
+26/02/2026 10:20:46:   code: 'ENOENT',
+26/02/2026 10:20:46:   syscall: 'open',
+26/02/2026 10:20:46:   path: 'C:\\Users\\x344942\\Documents\\code\\FASE5\\print\\src\\data\\printers.json'
+26/02/2026 10:20:46: }
+26/02/2026 10:20:46: 
+26/02/2026 10:20:46: Node.js v24.7.0
+26/02/2026 10:20:51: node:fs:440
+26/02/2026 10:20:51:     return binding.readFileUtf8(path, stringToFlags(options.flag));
+26/02/2026 10:20:51:                    ^
+26/02/2026 10:20:51: 
+26/02/2026 10:20:51: Error: ENOENT: no such file or directory, open 'C:\Users\x344942\Documents\code\FASE5\print\src\data\printers.json'
+26/02/2026 10:20:51:     at Object.readFileSync (node:fs:440:20)
+26/02/2026 10:20:51:     at file:///C:/Users/x344942/Documents/code/FASE5/print/src/routes/api.js:8:38
+26/02/2026 10:20:51:     at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+26/02/2026 10:20:51:     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)
+26/02/2026 10:20:51:     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+26/02/2026 10:20:51:   errno: -4058,
+26/02/2026 10:20:51:   code: 'ENOENT',
+26/02/2026 10:20:51:   syscall: 'open',
+26/02/2026 10:20:51:   path: 'C:\\Users\\x344942\\Documents\\code\\FASE5\\print\\src\\data\\printers.json'
+26/02/2026 10:20:51: }
+26/02/2026 10:20:51: 
+26/02/2026 10:20:51: Node.js v24.7.0
+26/02/2026 10:20:56: node:fs:440
+26/02/2026 10:20:56:     return binding.readFileUtf8(path, stringToFlags(options.flag));
+26/02/2026 10:20:56:                    ^
+26/02/2026 10:20:56: 
+26/02/2026 10:20:56: Error: ENOENT: no such file or directory, open 'C:\Users\x344942\Documents\code\FASE5\print\src\data\printers.json'
+26/02/2026 10:20:56:     at Object.readFileSync (node:fs:440:20)
+26/02/2026 10:20:56:     at file:///C:/Users/x344942/Documents/code/FASE5/print/src/routes/api.js:8:38
+26/02/2026 10:20:56:     at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+26/02/2026 10:20:56:     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)
+26/02/2026 10:20:56:     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+26/02/2026 10:20:56:   errno: -4058,
+26/02/2026 10:20:56:   code: 'ENOENT',
+26/02/2026 10:20:56:   syscall: 'open',
+26/02/2026 10:20:56:   path: 'C:\\Users\\x344942\\Documents\\code\\FASE5\\print\\src\\data\\printers.json'
+26/02/2026 10:20:56: }
+26/02/2026 10:20:56: 
+26/02/2026 10:20:56: Node.js v24.7.0
+26/02/2026 10:21:02: node:fs:440
+26/02/2026 10:21:02:     return binding.readFileUtf8(path, stringToFlags(options.flag));
+26/02/2026 10:21:02:                    ^
+26/02/2026 10:21:02: 
+26/02/2026 10:21:02: Error: ENOENT: no such file or directory, open 'C:\Users\x344942\Documents\code\FASE5\print\src\data\printers.json'
+26/02/2026 10:21:02:     at Object.readFileSync (node:fs:440:20)
+26/02/2026 10:21:02:     at file:///C:/Users/x344942/Documents/code/FASE5/print/src/routes/api.js:8:38
+26/02/2026 10:21:02:     at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+26/02/2026 10:21:02:     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:683:26)
+26/02/2026 10:21:02:     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+26/02/2026 10:21:02:   errno: -4058,
+26/02/2026 10:21:02:   code: 'ENOENT',
+26/02/2026 10:21:02:   syscall: 'open',
+26/02/2026 10:21:02:   path: 'C:\\Users\\x344942\\Documents\\code\\FASE5\\print\\src\\data\\printers.json'
+26/02/2026 10:21:02: }
+26/02/2026 10:21:02: 
+26/02/2026 10:21:02: Node.js v24.7.0

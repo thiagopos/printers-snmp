@@ -23,6 +23,7 @@ export function abrirBanco() {
       ip_liberty  TEXT    NOT NULL UNIQUE,
       ip_prodam   TEXT,
       sghx        TEXT,
+      serie_snmp  TEXT,
       criado_em   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
     );
 
@@ -71,20 +72,31 @@ export function abrirBanco() {
     CREATE INDEX IF NOT EXISTS idx_cons_serial      ON consumiveis_snapshot(toner_serial) WHERE toner_serial IS NOT NULL;
   `);
 
+  // ─── Migration: adiciona serie_snmp em bancos existentes ──────────────────
+  const cols = db.prepare('PRAGMA table_info(impressoras)').all();
+  if (!cols.find(c => c.name === 'serie_snmp')) {
+    db.exec('ALTER TABLE impressoras ADD COLUMN serie_snmp TEXT');
+  }
+
   return db;
 }
 
 // ─── Garante que a impressora existe na tabela e retorna seu id ───────────────
-export function upsertImpressora(db, impressora) {
+export function upsertImpressora(db, impressora, serieDispositivo = null) {
   const row = db.prepare(`
     SELECT id FROM impressoras WHERE ip_liberty = ?
   `).get(impressora['IP Liberty']);
 
-  if (row) return row.id;
+  if (row) {
+    if (serieDispositivo != null) {
+      db.prepare('UPDATE impressoras SET serie_snmp = ? WHERE id = ?').run(serieDispositivo, row.id);
+    }
+    return row.id;
+  }
 
   const { lastInsertRowid } = db.prepare(`
-    INSERT INTO impressoras (setor, modelo, serie, ip_liberty, ip_prodam, sghx)
-    VALUES (@setor, @modelo, @serie, @ip_liberty, @ip_prodam, @sghx)
+    INSERT INTO impressoras (setor, modelo, serie, ip_liberty, ip_prodam, sghx, serie_snmp)
+    VALUES (@setor, @modelo, @serie, @ip_liberty, @ip_prodam, @sghx, @serie_snmp)
   `).run({
     setor:      impressora.SETOR,
     modelo:     impressora.MODELO,
@@ -92,6 +104,7 @@ export function upsertImpressora(db, impressora) {
     ip_liberty: impressora['IP Liberty'],
     ip_prodam:  impressora['IP Prodam'] ?? null,
     sghx:       impressora['SGHx']    ?? null,
+    serie_snmp: serieDispositivo,
   });
 
   return lastInsertRowid;

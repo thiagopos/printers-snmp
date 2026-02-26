@@ -1,5 +1,14 @@
-import { Router } from 'express';
+import { Router } from 'express';import fs   from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// ─── Lookups para detecção de backup / impressora trocada ─────────────────────────
+const _printers      = JSON.parse(fs.readFileSync(path.join(__dirname, '../../data/printers.json'), 'utf-8'));
+const _backups       = JSON.parse(fs.readFileSync(path.join(__dirname, '../../data/backup.json'),   'utf-8'));
+const expectedSerial = new Map(_printers.map(p => [p['IP Liberty'], p['SÉRIE']]));
+const backupMap      = new Map(_backups.map(b  => [b['SÉRIE'],      b['BACKUPS']]));
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
@@ -202,11 +211,30 @@ export function criarRotasApi(db) {
       diasMap[row.impressora_id][row.nome] = row.dias_restantes;
     }
 
-    const resultado = impressoras.map(({ snap_id, ...imp }) => ({
-      ...imp,
-      consumiveis:    snap_id ? getConsums.all(snap_id) : [],
-      dias_restantes: diasMap[imp.id] ?? {},
-    }));
+    const resultado = impressoras.map(({ snap_id, ...imp }) => {
+      // ── Detecção de backup / impressora trocada ─────────────────────────────
+      const esperada = expectedSerial.get(imp.ip_liberty) ?? null;
+      const atual    = imp.serie_snmp ?? null;
+      let status_serie = 'ok';
+      let serie_info   = { esperada, atual };
+
+      if (esperada && atual && atual !== esperada) {
+        if (backupMap.has(atual)) {
+          status_serie = 'backup';
+          serie_info.backup_nome = backupMap.get(atual);
+        } else {
+          status_serie = 'trocada';
+        }
+      }
+
+      return {
+        ...imp,
+        consumiveis:    snap_id ? getConsums.all(snap_id) : [],
+        dias_restantes: diasMap[imp.id] ?? {},
+        status_serie,
+        serie_info,
+      };
+    });
 
     res.json(resultado);
   });
