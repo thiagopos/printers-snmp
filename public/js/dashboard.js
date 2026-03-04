@@ -1,3 +1,13 @@
+// ─── Mapeamento prédio → rótulo amigável ─────────────────────────────────────
+const PREDIO_LABEL = {
+  'hmacn_internacao':    'Hospital',
+  'hmacn_administracao': 'Administração',
+};
+function labelPredio(predio) {
+  if (!predio) return '—';
+  return PREDIO_LABEL[predio] ?? predio;
+}
+
 // ─── Mapeamento modelo → imagem ───────────────────────────────────────────────
 const MODELO_IMG = {
   'Samsung M4020': 'img/impressoras/m4020.png',
@@ -19,7 +29,7 @@ function corToner(nome) {
 
 function classePercentual(pct) {
   if (pct == null) return 'secondary';
-  if (pct < 10)   return 'danger';
+  if (pct <  5)   return 'danger';
   if (pct < 20)   return 'warning';
   return 'success';
 }
@@ -143,11 +153,12 @@ function sortarImpressoras(lista) {
   return [...lista].sort((a, b) => {
     switch (sortCol) {
       case 'modelo':  return sortDir * (a.modelo ?? '').localeCompare(b.modelo ?? '', 'pt-BR');
-      case 'setor':   return sortDir * (a.setor  ?? '').localeCompare(b.setor  ?? '', 'pt-BR');
+      case 'predio':  return sortDir * (a.local?.predio ?? '').localeCompare(b.local?.predio ?? '', 'pt-BR');
+      case 'andar':   return sortDir * (a.local?.andar  ?? '').localeCompare(b.local?.andar  ?? '', 'pt-BR');
+      case 'setor':   return sortDir * (a.local?.nome_setor ?? a.setor ?? '').localeCompare(b.local?.nome_setor ?? b.setor ?? '', 'pt-BR');
+      case 'local':   return sortDir * (a.local?.local_instalacao ?? '').localeCompare(b.local?.local_instalacao ?? '', 'pt-BR');
       case 'toner':   return sortDir * (tonerPreto(a.consumiveis) - tonerPreto(b.consumiveis));
       case 'tempo':   return sortDir * (tempoEstimadoDias(a.consumiveis, a.dias_restantes ?? {}) - tempoEstimadoDias(b.consumiveis, b.dias_restantes ?? {}));
-      case 'paginas': return sortDir * ((a.total_paginas_dispositivo ?? -1) - (b.total_paginas_dispositivo ?? -1));
-      case 'quando':  return sortDir * ((a.coletado_em ?? '').localeCompare(b.coletado_em ?? ''));
       case 'status': {
         const hoje = new Date().toISOString().slice(0, 10);
         return sortDir * (pesoStatus(a, hoje) - pesoStatus(b, hoje));
@@ -173,7 +184,7 @@ function aplicarFiltroESort() {
   const q = document.getElementById('filtro').value.toLowerCase();
   let lista = dadosImpressoras;
   if (q) lista = lista.filter(imp =>
-    (imp.modelo + ' ' + imp.setor + ' ' + (imp.serie_snmp ?? '')).toLowerCase().includes(q)
+    (imp.modelo + ' ' + (imp.local?.nome_setor ?? imp.setor) + ' ' + (imp.local?.predio ?? '') + ' ' + (imp.local?.andar ?? '') + ' ' + (imp.local?.local_instalacao ?? '') + ' ' + (imp.serie_snmp ?? '')).toLowerCase().includes(q)
   );
   renderTabela(sortarImpressoras(lista));
   atualizarHeadersSort();
@@ -210,10 +221,11 @@ function atualizarBotoesPeriodo(de, ate) {
 // ─── Instâncias de Chart ──────────────────────────────────────────────────────
 let chartDonut   = null;
 let chartPaginas = null;
+let impressorasTop = []; // dados {id, setor, modelo} das impressoras exibidas no gráfico
 
 function renderCards(s) {
-  document.getElementById('card-total').textContent    = s.total;
-  document.getElementById('card-online').textContent   = s.online_hoje;
+  document.getElementById('card-total').textContent    = s.total + ' / ' + s.total_config;
+  document.getElementById('card-resmas').textContent   = s.resmas_semana ?? '—';
   document.getElementById('card-atencao').textContent  = s.atencao;
   document.getElementById('card-criticos').textContent = s.criticos;
 }
@@ -221,7 +233,7 @@ function renderCards(s) {
 function renderDonut(s) {
   const ctx  = document.getElementById('chart-donut').getContext('2d');
   const data = {
-    labels:   ['OK (≥20%)', 'Atenção (10–20%)', 'Crítico (<10%)'],
+    labels:   ['OK (≥20%)', 'Atenção (5–20%)', 'Crítico (<5%)'],
     datasets: [{ data: [s.ok, s.atencao, s.criticos],
       backgroundColor: ['#198754', '#f59e0b', '#dc3545'], borderWidth: 2 }],
   };
@@ -233,18 +245,28 @@ function renderDonut(s) {
 }
 
 function renderBarPaginas(top) {
+  impressorasTop = top; // atualiza sempre para que o onClick use dados frescos
   const ctx    = document.getElementById('chart-paginas').getContext('2d');
-  const labels = top.map(r => r.setor.length > 35 ? r.setor.slice(0, 35) + '…' : r.setor);
+  const labels = top.map(r => {
+    const setor = r.nome_setor ?? r.setor;
+    const label = r.local_instalacao ? setor + ' — ' + r.local_instalacao : setor;
+    return label.length > 38 ? label.slice(0, 38) + '…' : label;
+  });
   const data   = {
     labels,
     datasets: [{ label: 'Total de Páginas', data: top.map(r => r.total_paginas),
-      backgroundColor: '#3b82f6', borderRadius: 4 }],
+      backgroundColor: '#3b82f6', hoverBackgroundColor: '#2563eb', borderRadius: 4 }],
   };
   if (chartPaginas) { Object.assign(chartPaginas.data, data); chartPaginas.update(); return; }
   chartPaginas = new Chart(ctx, {
     type: 'bar', data,
     options: {
       indexAxis: 'y',
+      onClick: (_evt, elements) => {
+        if (!elements.length) return;
+        const imp = impressorasTop[elements[0].index];
+        if (imp) location.href = `impressora.html?id=${imp.id}`;
+      },
       plugins: {
         legend: { display: false },
         datalabels: {
@@ -265,6 +287,9 @@ function renderBarPaginas(top) {
       layout: { padding: { right: 72 } },
     },
   });
+
+  // Cursor pointer ao passar sobre as barras
+  document.getElementById('chart-paginas').style.cursor = 'pointer';
 }
 
 function renderTabela(impressoras) {
@@ -277,13 +302,12 @@ function renderTabela(impressoras) {
       || !!([imp.alerta, imp.mensagem_tela].filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto').join(''))
       || imp.consumiveis.some(c => ehTonerPuro(c.nome) && c.percentual === 0);
     const img     = temErro ? 'img/impressoras/error.png' : (MODELO_IMG[imp.modelo] ?? '');
-    const paginas = imp.total_paginas_dispositivo?.toLocaleString('pt-BR') ?? '—';
     const badges  = renderTonerBadges(imp.consumiveis);
     const tempo   = renderTempoEstimado(imp.consumiveis, imp.dias_restantes ?? {});
-    const quando  = timeAgo(imp.coletado_em);
-    const quandoBadge = online
-      ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary"><i class="bi bi-clock-history me-1"></i>${quando}</span>`
-      : `<span class="badge bg-secondary bg-opacity-10 text-secondary border"><i class="bi bi-clock-history me-1"></i>${quando}</span>`;
+    const predio  = labelPredio(imp.local?.predio);
+    const andar   = imp.local?.andar           ?? '—';
+    const setor   = imp.local?.nome_setor      ?? imp.setor ?? '—';
+    const local   = imp.local?.local_instalacao ?? '—';
 
     const alertaTexto = [imp.alerta, imp.mensagem_tela]
       .filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto')
@@ -325,11 +349,12 @@ function renderTabela(impressoras) {
           </div>
         </td>
         <td class="text-muted font-monospace" style="font-size:.8rem">${imp.serie_snmp ?? '—'}</td>
-        <td class="text-muted">${imp.setor}</td>
+        <td class="text-muted col-oculta-mobile">${predio}</td>
+        <td class="text-muted col-oculta-mobile">${andar}</td>
+        <td class="text-muted">${setor}</td>
+        <td class="text-muted col-oculta-mobile">${local}</td>
         <td>${badges}</td>
         <td class="col-oculta-mobile">${tempo}</td>
-        <td class="col-oculta-mobile">${paginas}</td>
-        <td class="col-oculta-mobile">${quandoBadge}</td>
         <td>${statusBadge}</td>
         <td onclick="event.stopPropagation()">
           <a href="http://${imp.ip_liberty}" target="_blank" rel="noopener noreferrer"
@@ -402,6 +427,19 @@ document.getElementById('btn-aplicar-intervalo')?.addEventListener('click', () =
   intervaloAtivo = true;
   if (chartPaginas) { chartPaginas.destroy(); chartPaginas = null; }
   carregarTudo();
+});
+
+// ─── Botão expandir setores ──────────────────────────────────────────────────
+document.getElementById('btn-expandir-setores')?.addEventListener('click', () => {
+  let url = 'todos-setores.html';
+  if (intervaloAtivo) {
+    const de  = document.getElementById('filtro-de').value;
+    const ate = document.getElementById('filtro-ate').value;
+    if (de && ate) url += `?de=${de}&ate=${ate}`;
+  } else {
+    url += `?periodo=${periodoAtual}`;
+  }
+  location.href = url;
 });
 
 // ─── Botão de atualizar ──────────────────────────────────────────────────────

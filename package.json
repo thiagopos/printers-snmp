@@ -11,6 +11,7 @@
     "hp-e87660": "node src/index.js --modelo=hp-e87660",
     "walker": "node src/walker.js",
     "seed-precos": "node src/seed-precos.js",
+    "migrate": "node src/migrate-v2.js",
     "truncate": "node src/truncate.js",
     "serve": "node src/server.js",
     "dev":      "node --watch src/server.js",

@@ -5,6 +5,26 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH   = path.join(__dirname, '../data/db/monitor.db');
 
+// ─── Parser de setor ─────────────────────────────────────────────────────────
+// Formato: "{andar} - {NOME_SETOR} {local_instalacao}"
+// Palavras de setor: ≤ 1 letra minúscula ASCII (lida com CAPS acentuado)
+function parseSetor(setor = '') {
+  const match = setor.match(/^(\d+)\s*-\s*(.+)$/);
+  if (!match) return { andar: null, nome_setor: setor, local_instalacao: setor };
+  const andar    = parseInt(match[1]);
+  const resto    = match[2].trim();
+  const palavras = resto.split(' ');
+  let splitIdx = palavras.length;
+  for (let i = 0; i < palavras.length; i++) {
+    if ((palavras[i].match(/[a-z]/g) || []).length > 1) { splitIdx = i; break; }
+  }
+  return {
+    andar,
+    nome_setor:       palavras.slice(0, splitIdx).join(' ') || resto,
+    local_instalacao: palavras.slice(splitIdx).join(' ')   || palavras.slice(0, splitIdx).join(' ') || resto,
+  };
+}
+
 // ─── Abre (ou cria) o banco e garante o schema ────────────────────────────────
 export function abrirBanco() {
   const db = new Database(DB_PATH);
@@ -14,6 +34,31 @@ export function abrirBanco() {
   db.pragma('foreign_keys = ON');
 
   db.exec(`
+    -- ── Ponto de rede fixo (IP nunca muda) ─────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS locais (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome_setor       TEXT    NOT NULL,
+      local_instalacao TEXT    NOT NULL,
+      predio           TEXT,
+      andar            INTEGER,
+      ip_liberty       TEXT    NOT NULL UNIQUE,
+      ip_prodam        TEXT,
+      sghx             TEXT,
+      ativo            INTEGER NOT NULL DEFAULT 1,
+      criado_em        TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+    );
+
+    -- ── Hardware físico (modelo + serial identifica univocamente a impressora) ──
+    CREATE TABLE IF NOT EXISTS equipamentos (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      modelo      TEXT    NOT NULL,
+      serie       TEXT    NOT NULL UNIQUE,
+      is_backup   INTEGER NOT NULL DEFAULT 0,
+      backup_nome TEXT,
+      notas       TEXT,
+      criado_em   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+    );
+
     -- ── Cadastro fixo de impressoras ──────────────────────────────────────────
     CREATE TABLE IF NOT EXISTS impressoras (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,17 +127,34 @@ export function abrirBanco() {
     );
 
     -- ── Índices para as queries mais frequentes ────────────────────────────────
-    CREATE INDEX IF NOT EXISTS idx_snap_impressora  ON snapshots(impressora_id, coletado_em);
-    CREATE INDEX IF NOT EXISTS idx_cons_snapshot    ON consumiveis_snapshot(snapshot_id);
-    CREATE INDEX IF NOT EXISTS idx_cons_serial      ON consumiveis_snapshot(toner_serial) WHERE toner_serial IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_snap_impressora   ON snapshots(impressora_id, coletado_em);
+    CREATE INDEX IF NOT EXISTS idx_cons_snapshot     ON consumiveis_snapshot(snapshot_id);
+    CREATE INDEX IF NOT EXISTS idx_cons_serial       ON consumiveis_snapshot(toner_serial) WHERE toner_serial IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_trocas_impressora ON trocas_insumo(impressora_id, ocorrido_em);
+    CREATE INDEX IF NOT EXISTS idx_locais_ip         ON locais(ip_liberty);
+    CREATE INDEX IF NOT EXISTS idx_equip_serie       ON equipamentos(serie);
+    CREATE INDEX IF NOT EXISTS idx_equip_backup      ON equipamentos(is_backup);
   `);
 
-  // ─── Migration: adiciona serie_snmp em bancos existentes ──────────────────
-  const cols = db.prepare('PRAGMA table_info(impressoras)').all();
-  if (!cols.find(c => c.name === 'serie_snmp')) {
+  // ─── Migrations em bancos existentes (idempotente) ──────────────────────────
+  const colsImp = db.prepare('PRAGMA table_info(impressoras)').all().map(c => c.name);
+  if (!colsImp.includes('serie_snmp')) {
     db.exec('ALTER TABLE impressoras ADD COLUMN serie_snmp TEXT');
   }
+  if (!colsImp.includes('local_id')) {
+    db.exec('ALTER TABLE impressoras ADD COLUMN local_id INTEGER REFERENCES locais(id)');
+  }
+  if (!colsImp.includes('equipamento_id')) {
+    db.exec('ALTER TABLE impressoras ADD COLUMN equipamento_id INTEGER REFERENCES equipamentos(id)');
+  }
+  if (!colsImp.includes('ativo')) {
+    db.exec('ALTER TABLE impressoras ADD COLUMN ativo INTEGER NOT NULL DEFAULT 1');
+  }
+  // Índices das FK (criados após garantir que as colunas existem)
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_imp_local ON impressoras(local_id);
+    CREATE INDEX IF NOT EXISTS idx_imp_equip ON impressoras(equipamento_id);
+  `);
 
   return db;
 }
@@ -100,27 +162,73 @@ export function abrirBanco() {
 // ─── Garante que a impressora existe na tabela e retorna seu id ───────────────
 export function upsertImpressora(db, impressora, serieDispositivo = null) {
   const row = db.prepare(`
-    SELECT id FROM impressoras WHERE ip_liberty = ?
+    SELECT id, serie_snmp, equipamento_id FROM impressoras WHERE ip_liberty = ?
   `).get(impressora['IP Liberty']);
 
   if (row) {
     if (serieDispositivo != null) {
-      db.prepare('UPDATE impressoras SET serie_snmp = ? WHERE id = ?').run(serieDispositivo, row.id);
+      db.prepare('UPDATE impressoras SET serie_snmp = ? WHERE id = ?')
+        .run(serieDispositivo, row.id);
+
+      // Atualiza equipamento_id se o serial mudou (troca física de hardware)
+      const equipChanged = !row.equipamento_id || serieDispositivo !== row.serie_snmp;
+      if (equipChanged) {
+        let equip = db.prepare('SELECT id FROM equipamentos WHERE serie = ?').get(serieDispositivo);
+        if (!equip) {
+          db.prepare('INSERT OR IGNORE INTO equipamentos (modelo, serie) VALUES (?, ?)')
+            .run(impressora.MODELO, serieDispositivo);
+          equip = db.prepare('SELECT id FROM equipamentos WHERE serie = ?').get(serieDispositivo);
+        }
+        if (equip) {
+          db.prepare('UPDATE impressoras SET equipamento_id = ? WHERE id = ?')
+            .run(equip.id, row.id);
+        }
+      }
     }
     return row.id;
   }
 
-  const { lastInsertRowid } = db.prepare(`
-    INSERT INTO impressoras (setor, modelo, serie, ip_liberty, ip_prodam, sghx, serie_snmp)
-    VALUES (@setor, @modelo, @serie, @ip_liberty, @ip_prodam, @sghx, @serie_snmp)
+  // Nova impressora: criar local + equipamento + impressora
+  const { andar, nome_setor, local_instalacao } = parseSetor(impressora.SETOR ?? '');
+
+  db.prepare(`
+    INSERT OR IGNORE INTO locais
+      (nome_setor, local_instalacao, andar, ip_liberty, ip_prodam, sghx)
+    VALUES
+      (@nome_setor, @local_instalacao, @andar, @ip_liberty, @ip_prodam, @sghx)
   `).run({
-    setor:      impressora.SETOR,
-    modelo:     impressora.MODELO,
-    serie:      impressora['SÉRIE']   ?? null,
+    nome_setor, local_instalacao, andar,
     ip_liberty: impressora['IP Liberty'],
     ip_prodam:  impressora['IP Prodam'] ?? null,
-    sghx:       impressora['SGHx']    ?? null,
-    serie_snmp: serieDispositivo,
+    sghx:       impressora['SGHx']      ?? null,
+  });
+
+  const local = db.prepare('SELECT id FROM locais WHERE ip_liberty = ?')
+                  .get(impressora['IP Liberty']);
+
+  const serieEquip = serieDispositivo ?? impressora['SÉRIE'] ?? null;
+  let equipId = null;
+  if (serieEquip) {
+    db.prepare('INSERT OR IGNORE INTO equipamentos (modelo, serie) VALUES (?, ?)')
+      .run(impressora.MODELO, serieEquip);
+    equipId = db.prepare('SELECT id FROM equipamentos WHERE serie = ?').get(serieEquip)?.id ?? null;
+  }
+
+  const { lastInsertRowid } = db.prepare(`
+    INSERT INTO impressoras
+      (setor, modelo, serie, ip_liberty, ip_prodam, sghx, serie_snmp, local_id, equipamento_id)
+    VALUES
+      (@setor, @modelo, @serie, @ip_liberty, @ip_prodam, @sghx, @serie_snmp, @local_id, @equipamento_id)
+  `).run({
+    setor:          impressora.SETOR,
+    modelo:         impressora.MODELO,
+    serie:          impressora['SÉRIE']    ?? null,
+    ip_liberty:     impressora['IP Liberty'],
+    ip_prodam:      impressora['IP Prodam'] ?? null,
+    sghx:           impressora['SGHx']      ?? null,
+    serie_snmp:     serieDispositivo,
+    local_id:       local?.id   ?? null,
+    equipamento_id: equipId,
   });
 
   return lastInsertRowid;
