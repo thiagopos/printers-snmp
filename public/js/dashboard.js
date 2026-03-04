@@ -19,7 +19,7 @@ function corToner(nome) {
 
 function classePercentual(pct) {
   if (pct == null) return 'secondary';
-  if (pct < 10)   return 'danger';
+  if (pct <  5)   return 'danger';
   if (pct < 20)   return 'warning';
   return 'success';
 }
@@ -210,10 +210,11 @@ function atualizarBotoesPeriodo(de, ate) {
 // ─── Instâncias de Chart ──────────────────────────────────────────────────────
 let chartDonut   = null;
 let chartPaginas = null;
+let impressorasTop = []; // dados {id, setor, modelo} das impressoras exibidas no gráfico
 
 function renderCards(s) {
-  document.getElementById('card-total').textContent    = s.total;
-  document.getElementById('card-online').textContent   = s.online_hoje;
+  document.getElementById('card-total').textContent    = s.total + ' / ' + s.total_config;
+  document.getElementById('card-resmas').textContent   = s.resmas_semana ?? '—';
   document.getElementById('card-atencao').textContent  = s.atencao;
   document.getElementById('card-criticos').textContent = s.criticos;
 }
@@ -221,7 +222,7 @@ function renderCards(s) {
 function renderDonut(s) {
   const ctx  = document.getElementById('chart-donut').getContext('2d');
   const data = {
-    labels:   ['OK (≥20%)', 'Atenção (10–20%)', 'Crítico (<10%)'],
+    labels:   ['OK (≥20%)', 'Atenção (5–20%)', 'Crítico (<5%)'],
     datasets: [{ data: [s.ok, s.atencao, s.criticos],
       backgroundColor: ['#198754', '#f59e0b', '#dc3545'], borderWidth: 2 }],
   };
@@ -233,18 +234,27 @@ function renderDonut(s) {
 }
 
 function renderBarPaginas(top) {
+  impressorasTop = top; // atualiza sempre para que o onClick use dados frescos
   const ctx    = document.getElementById('chart-paginas').getContext('2d');
-  const labels = top.map(r => r.setor.length > 35 ? r.setor.slice(0, 35) + '…' : r.setor);
+  const labels = top.map(r => {
+    const label = r.modelo + ' — ' + r.setor;
+    return label.length > 38 ? label.slice(0, 38) + '…' : label;
+  });
   const data   = {
     labels,
     datasets: [{ label: 'Total de Páginas', data: top.map(r => r.total_paginas),
-      backgroundColor: '#3b82f6', borderRadius: 4 }],
+      backgroundColor: '#3b82f6', hoverBackgroundColor: '#2563eb', borderRadius: 4 }],
   };
   if (chartPaginas) { Object.assign(chartPaginas.data, data); chartPaginas.update(); return; }
   chartPaginas = new Chart(ctx, {
     type: 'bar', data,
     options: {
       indexAxis: 'y',
+      onClick: (_evt, elements) => {
+        if (!elements.length) return;
+        const imp = impressorasTop[elements[0].index];
+        if (imp) location.href = `impressora.html?id=${imp.id}`;
+      },
       plugins: {
         legend: { display: false },
         datalabels: {
@@ -265,6 +275,9 @@ function renderBarPaginas(top) {
       layout: { padding: { right: 72 } },
     },
   });
+
+  // Cursor pointer ao passar sobre as barras
+  document.getElementById('chart-paginas').style.cursor = 'pointer';
 }
 
 function renderTabela(impressoras) {
@@ -402,6 +415,19 @@ document.getElementById('btn-aplicar-intervalo')?.addEventListener('click', () =
   intervaloAtivo = true;
   if (chartPaginas) { chartPaginas.destroy(); chartPaginas = null; }
   carregarTudo();
+});
+
+// ─── Botão expandir setores ──────────────────────────────────────────────────
+document.getElementById('btn-expandir-setores')?.addEventListener('click', () => {
+  let url = 'todos-setores.html';
+  if (intervaloAtivo) {
+    const de  = document.getElementById('filtro-de').value;
+    const ate = document.getElementById('filtro-ate').value;
+    if (de && ate) url += `?de=${de}&ate=${ate}`;
+  } else {
+    url += `?periodo=${periodoAtual}`;
+  }
+  location.href = url;
 });
 
 // ─── Botão de atualizar ──────────────────────────────────────────────────────

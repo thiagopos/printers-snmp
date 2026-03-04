@@ -59,7 +59,8 @@ function formatarDataHora(iso) {
 const id = new URLSearchParams(location.search).get('id');
 if (!id) location.href = '/';
 
-let chartHistorico = null;
+let chartHistorico  = null;
+let chartFolhasDia  = null;
 
 // ─── Carrega e renderiza tudo ─────────────────────────────────────────────────
 async function carregar() {
@@ -112,6 +113,18 @@ async function carregar() {
       <div class="fw-semibold">${v}</div>
     </div>`).join('');
 
+  // ── Alertas do último snapshot ──────────────────────────────────────────────
+  const alertasDiv = document.getElementById('alertas-impressora');
+  const alertasMsgs = [ultimo?.alerta, ultimo?.mensagem_tela]
+    .filter(v => v && v.trim().replace(/\/$/, '').toLowerCase() !== 'pronto');
+  if (alertasMsgs.length) {
+    alertasDiv.innerHTML = alertasMsgs.map(msg => `
+      <div class="alert alert-warning d-flex align-items-center gap-2 mb-2 py-2" role="alert">
+        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+        <span>${msg}</span>
+      </div>`).join('');
+  }
+
   // ── Consumíveis atuais + dias restantes ────────────────────────────────────
   const divConsums = document.getElementById('consumiveis-atuais');
   if (ultimo?.consumiveis?.length) {
@@ -147,16 +160,28 @@ async function carregar() {
     divConsums.innerHTML = '<p class="text-muted small">Sem dados disponíveis.</p>';
   }
 
-  // ── Gráfico de histórico ────────────────────────────────────────────────────
+  // ── Gráfico de histórico (1 ponto por dia, últimos 14 dias) ─────────────────
   if (historico.length > 0) {
-    document.getElementById('chart-subtitulo').textContent =
-      `${historico.length} coleta(s)`;
+    // Agrupa por dia: para cada consumível usa o percentual do ÚLTIMO snapshot do dia
+    const LIMITE_DIAS = 14;
+    const porDiaToner = new Map(); // 'YYYY-MM-DD' → Map<nome, percentual>
+    for (const s of historico) {
+      const dia = s.coletado_em.slice(0, 10);
+      if (!porDiaToner.has(dia)) porDiaToner.set(dia, new Map());
+      const mapa = porDiaToner.get(dia);
+      for (const c of s.consumiveis) {
+        if (c.percentual != null) mapa.set(c.nome, c.percentual);
+      }
+    }
 
-    const labels = historico.map(s =>
-      new Date(s.coletado_em).toLocaleString('pt-BR', {
-        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-      })
-    );
+    // Ordena e limita aos últimos 14 dias
+    let diasToner = [...porDiaToner.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    if (diasToner.length > LIMITE_DIAS) diasToner = diasToner.slice(-LIMITE_DIAS);
+
+    const labels = diasToner.map(([dia]) => {
+      const [, mes, d] = dia.split('-');
+      return `${d}/${mes}`;
+    });
 
     const nomes = [...new Set(historico.flatMap(s => s.consumiveis.map(c => c.nome)))]
       .filter(n => !n.toLowerCase().includes('unidade') && !n.toLowerCase().includes('coleta'))
@@ -166,17 +191,20 @@ async function carregar() {
       const { border, bg, dash, width } = configLinha(nome);
       return {
         label:                nome,
-        data:                 historico.map(s => s.consumiveis.find(c => c.nome === nome)?.percentual ?? null),
+        data:                 diasToner.map(([, mapa]) => mapa.get(nome) ?? null),
         borderColor:          border,
         backgroundColor:      bg,
         borderDash:           dash,
         borderWidth:          width,
         tension:              0.3,
         spanGaps:             true,
-        pointRadius:          historico.length > 30 ? 2 : 4,
+        pointRadius:          4,
         pointBackgroundColor: border,
       };
     });
+
+    document.getElementById('chart-subtitulo').textContent =
+      `${diasToner.length} dia${diasToner.length !== 1 ? 's' : ''} (últimos ${LIMITE_DIAS})`;
 
     const ctx = document.getElementById('chart-historico').getContext('2d');
     if (chartHistorico) chartHistorico.destroy();
@@ -186,7 +214,7 @@ async function carregar() {
       options: {
         scales: {
           y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 13 } } },
-          x: { ticks: { maxTicksLimit: 10, font: { size: 13 } } },
+          x: { ticks: { maxTicksLimit: 14, font: { size: 13 } } },
         },
         plugins: { legend: { position: 'bottom', labels: { font: { size: 14 } } } },
         interaction: { mode: 'index', intersect: false },
@@ -195,6 +223,140 @@ async function carregar() {
   } else {
     document.getElementById('chart-historico').closest('.card').querySelector('.card-body').innerHTML =
       '<p class="text-muted text-center py-4">Nenhum dado histórico ainda.</p>';
+  }
+
+  // ── Gráfico de consumo diário de papel ────────────────────────────────────
+  {
+    const LIMITE_DIAS_PAPEL = 14;
+
+    // Agrupa snapshots por dia, mantendo o último (maior total) de cada dia
+    const porDia = new Map(); // 'YYYY-MM-DD' → { paginas, duplex }
+    for (const s of historico) {
+      const dia = s.coletado_em.slice(0, 10);
+      const cur = porDia.get(dia);
+      const pag = s.total_paginas_dispositivo ?? null;
+      const dup = s.total_duplex ?? null;
+      // Usa o maior valor do dia (snapshots estão em ordem crescente)
+      if (!cur
+          || (pag != null && (cur.paginas == null || pag > cur.paginas))) {
+        porDia.set(dia, { paginas: pag, duplex: dup });
+      }
+    }
+
+    // Ordena os dias e limita a LIMITE_DIAS_PAPEL + 1 (precisa do dia anterior para calcular o delta)
+    let dias = [...porDia.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    if (dias.length > LIMITE_DIAS_PAPEL + 1) dias = dias.slice(-(LIMITE_DIAS_PAPEL + 1));
+
+    // Calcula deltas diários entre entradas consecutivas com ambos os valores
+    const labelsF    = [];
+    const dadosFrst  = [];  // frente (simples): delta_paginas - 2*delta_duplex
+    const dadosDpx   = [];  // duplex: delta_duplex
+    const dadosTotFolhas = []; // total folhas: delta_paginas - delta_duplex
+
+    for (let i = 1; i < dias.length; i++) {
+      const [diaLabel, cur] = dias[i];
+      const [, prev]        = dias[i - 1];
+
+      if (cur.paginas == null || prev.paginas == null) continue;
+      const deltaPag = cur.paginas - prev.paginas;
+      if (deltaPag <= 0) continue; // sem impressão ou reset de contador
+
+      const hasDuplex = cur.duplex != null && prev.duplex != null;
+      const deltaDup  = hasDuplex ? Math.max(0, cur.duplex - prev.duplex) : null;
+
+      // frente simples = faces totais - 2 × sheets duplex
+      const frente = deltaDup != null
+        ? Math.max(0, deltaPag - 2 * deltaDup)
+        : null;
+
+      // Formata label como DD/MM
+      const [ano, mes, d] = diaLabel.split('-');
+      labelsF.push(`${d}/${mes}`);
+      dadosFrst.push(frente);
+      dadosDpx.push(deltaDup);
+      dadosTotFolhas.push(deltaDup != null ? frente + deltaDup : deltaPag);
+    }
+
+    const subEl = document.getElementById('folhas-subtitulo');
+    if (!labelsF.length) {
+      document.getElementById('chart-folhas-dia').closest('.card').querySelector('.card-body').innerHTML =
+        '<p class="text-muted text-center py-4">Dados insuficientes para o gráfico diário.</p>';
+      if (subEl) subEl.textContent = '';
+    } else {
+      if (subEl) subEl.textContent = `${labelsF.length} dia${labelsF.length !== 1 ? 's' : ''}`;
+
+      const temDuplex = dadosDpx.some(v => v != null && v > 0);
+      const datasets  = [];
+
+      if (temDuplex) {
+        datasets.push({
+          label:           'Frente (simples)',
+          data:            dadosFrst,
+          borderColor:     '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.12)',
+          borderWidth:     2.5,
+          tension:         0.3,
+          spanGaps:        false,
+          pointRadius:     labelsF.length > 30 ? 2 : 4,
+          pointBackgroundColor: '#3b82f6',
+          fill: true,
+        });
+        datasets.push({
+          label:           'Duplex',
+          data:            dadosDpx,
+          borderColor:     '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.08)',
+          borderWidth:     2.5,
+          tension:         0.3,
+          spanGaps:        false,
+          pointRadius:     labelsF.length > 30 ? 2 : 4,
+          pointBackgroundColor: '#10b981',
+          fill: true,
+        });
+      } else {
+        // Sem dados de duplex — mostra apenas total de folhas
+        datasets.push({
+          label:           'Folhas',
+          data:            dadosTotFolhas,
+          borderColor:     '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.12)',
+          borderWidth:     2.5,
+          tension:         0.3,
+          spanGaps:        false,
+          pointRadius:     labelsF.length > 30 ? 2 : 4,
+          pointBackgroundColor: '#3b82f6',
+          fill: true,
+        });
+      }
+
+      const ctxF = document.getElementById('chart-folhas-dia').getContext('2d');
+      if (chartFolhasDia) chartFolhasDia.destroy();
+      chartFolhasDia = new Chart(ctxF, {
+        type: 'line',
+        data: { labels: labelsF, datasets },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                font: { size: 13 },
+                callback: v => v.toLocaleString('pt-BR'),
+              },
+            },
+            x: { ticks: { maxTicksLimit: 15, font: { size: 13 } } },
+          },
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 14 } } },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${(ctx.parsed.y ?? 0).toLocaleString('pt-BR')} folhas`,
+              },
+            },
+          },
+          interaction: { mode: 'index', intersect: false },
+        },
+      });
+    }
   }
 
   // ── Histórico de cartuchos ─────────────────────────────────────────────────
