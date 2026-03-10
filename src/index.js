@@ -60,7 +60,7 @@ const OIDS_SAMSUNG = [
 // ═══════════════════════════════════════════════════════════════════════════════
 // prtGeneralPrinterName — nome do modelo via MIB padrão
 const OID_HP_NOME_MOD  = '1.3.6.1.2.1.43.5.1.1.16.1';
-// prtMarkerLifeCount — total de páginas impressas pelo dispositivo
+// prtMarkerLifeCount — total de impressões do dispositivo (simplex + duplex)
 const OID_HP_TOTAL_PAG = '1.3.6.1.2.1.43.10.2.1.4.1.1';
 
 // ─── Branch HP proprietária: 1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.1.1.X.1.0 ──
@@ -75,6 +75,8 @@ const OID_HP_TONER_CAPACID  = `${HP_SUPPLY}.1.1.0`;   // Capacidade declarada
 
 // HP proprietária: páginas remanescentes estimadas (baseado na cobertura atual)
 const OID_HP_PAG_REST = '1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.1.1.0';
+// HP proprietária: total acumulado de impressões em modo duplex
+const OID_HP_DUPLEX_PAG = '1.3.6.1.4.1.11.2.3.9.4.2.1.2.2.1.20.0';
 
 const NOMES_HP = [
   'Cartucho de Toner Preto',    // índice 1
@@ -88,6 +90,7 @@ const OID_HP_ATUAL   = NOMES_HP.map((_, i) => `1.3.6.1.2.1.43.11.1.1.9.1.${i + 1
 
 const OIDS_HP = [
   OID_INFO, OID_DEVICE_SERIAL, OID_HP_NOME_MOD, OID_HP_PAG_REST, OID_HP_TOTAL_PAG,
+  OID_HP_DUPLEX_PAG,
   OID_HP_TONER_PN, OID_HP_TONER_SERIAL, OID_HP_TONER_IMPRESSO,
   OID_HP_TONER_INSTALL, OID_HP_TONER_LASTUSE, OID_HP_TONER_CAPACID,
   ...OID_HP_NOMES, ...OID_HP_NOMINAL, ...OID_HP_ATUAL,
@@ -123,7 +126,7 @@ const OID_E57540_PAG_REST = Array.from({length: NUM_TONERS_E57540}, (_, i) => `1
 const OID_E57540_CAPACID  = Array.from({length: NUM_TONERS_E57540}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.4.${i+1}.0`);
 
 const OIDS_E57540 = [
-  OID_INFO, OID_DEVICE_SERIAL, OID_HP_TOTAL_PAG,
+  OID_INFO, OID_DEVICE_SERIAL, OID_HP_TOTAL_PAG, OID_HP_DUPLEX_PAG,
   ...OID_E57540_NOMES, ...OID_E57540_NOMINAL, ...OID_E57540_ATUAL,
   ...OID_E57540_PN, ...OID_E57540_SERIAL, ...OID_E57540_IMPRESSO,
   ...OID_E57540_INSTALL, ...OID_E57540_LASTUSE,
@@ -177,7 +180,7 @@ const OID_E87660_PAG_REST = Array.from({length: NUM_TONERS_E87660}, (_, i) => `1
 const OID_E87660_CAPACID  = Array.from({length: NUM_TONERS_E87660}, (_, i) => `1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.10.5.1.4.${i+1}.0`);
 
 const OIDS_E87660 = [
-  OID_INFO, OID_DEVICE_SERIAL, OID_HP_TOTAL_PAG,
+  OID_INFO, OID_DEVICE_SERIAL, OID_HP_TOTAL_PAG, OID_HP_DUPLEX_PAG,
   ...OID_E87660_NOMES, ...OID_E87660_NOMINAL, ...OID_E87660_ATUAL,
   ...OID_E87660_PN, ...OID_E87660_SERIAL, ...OID_E87660_IMPRESSO,
   ...OID_E87660_INSTALL, ...OID_E87660_LASTUSE,
@@ -253,44 +256,47 @@ function consultarImpressora(impressora) {
       };
 
       if (isHPColorA3) {
-        resultado.totalImpresso = parseInt(obterValor(OID_HP_TOTAL_PAG)) || null;
+        resultado.totalImpresso = parseNumeroOuNull(obterValor(OID_HP_TOTAL_PAG));
+        resultado.totalDuplex   = parseNumeroOuNull(obterValor(OID_HP_DUPLEX_PAG));
         resultado.toners = Array.from({length: NUM_TONERS_E87660}, (_, i) => ({
           nome:     ['Preto', 'Ciano', 'Magenta', 'Amarelo'][i],
           pn:       limparStr(obterValor(OID_E87660_PN[i])),
           serial:   limparStr(obterValor(OID_E87660_SERIAL[i])),
-          impresso: parseInt(obterValor(OID_E87660_IMPRESSO[i])) || null,
+          impresso: parseNumeroOuNull(obterValor(OID_E87660_IMPRESSO[i])),
           install:  limparStr(obterValor(OID_E87660_INSTALL[i])),
           lastUse:  limparStr(obterValor(OID_E87660_LASTUSE[i])),
-          pagRest:  parseInt(obterValor(OID_E87660_PAG_REST[i])) || null,
-          capacid:  parseInt(obterValor(OID_E87660_CAPACID[i])) || null,
+          pagRest:  parseNumeroOuNull(obterValor(OID_E87660_PAG_REST[i])),
+          capacid:  parseNumeroOuNull(obterValor(OID_E87660_CAPACID[i])),
         }));
       } else if (isHPColor) {
-        resultado.totalImpresso = parseInt(obterValor(OID_HP_TOTAL_PAG)) || null;
+        resultado.totalImpresso = parseNumeroOuNull(obterValor(OID_HP_TOTAL_PAG));
+        resultado.totalDuplex   = parseNumeroOuNull(obterValor(OID_HP_DUPLEX_PAG));
         resultado.toners = Array.from({length: NUM_TONERS_E57540}, (_, i) => ({
           nome:     ['Preto', 'Ciano', 'Magenta', 'Amarelo'][i],
           pn:       limparStr(obterValor(OID_E57540_PN[i])),
           serial:   limparStr(obterValor(OID_E57540_SERIAL[i])),
-          impresso: parseInt(obterValor(OID_E57540_IMPRESSO[i])) || null,
+          impresso: parseNumeroOuNull(obterValor(OID_E57540_IMPRESSO[i])),
           install:  limparStr(obterValor(OID_E57540_INSTALL[i])),
           lastUse:  limparStr(obterValor(OID_E57540_LASTUSE[i])),
-          pagRest:  parseInt(obterValor(OID_E57540_PAG_REST[i])) || null,
-          capacid:  parseInt(obterValor(OID_E57540_CAPACID[i])) || null,
+          pagRest:  parseNumeroOuNull(obterValor(OID_E57540_PAG_REST[i])),
+          capacid:  parseNumeroOuNull(obterValor(OID_E57540_CAPACID[i])),
         }));
       } else if (isHP) {
         resultado.nomeModelo    = obterValor(OID_HP_NOME_MOD);
-        resultado.paginasRest   = parseInt(obterValor(OID_HP_PAG_REST))       || null;
-        resultado.totalImpresso = parseInt(obterValor(OID_HP_TOTAL_PAG))      || null;
+        resultado.paginasRest   = parseNumeroOuNull(obterValor(OID_HP_PAG_REST));
+        resultado.totalImpresso = parseNumeroOuNull(obterValor(OID_HP_TOTAL_PAG));
+        resultado.totalDuplex   = parseNumeroOuNull(obterValor(OID_HP_DUPLEX_PAG));
         resultado.tonerPN       = limparStr(obterValor(OID_HP_TONER_PN));
         resultado.tonerSerial   = limparStr(obterValor(OID_HP_TONER_SERIAL));
-        resultado.tonerImpresso = parseInt(obterValor(OID_HP_TONER_IMPRESSO)) || null;
+        resultado.tonerImpresso = parseNumeroOuNull(obterValor(OID_HP_TONER_IMPRESSO));
         resultado.tonerInstall  = limparStr(obterValor(OID_HP_TONER_INSTALL));
         resultado.tonerLastUse  = limparStr(obterValor(OID_HP_TONER_LASTUSE));
         resultado.tonerCapacid  = limparStr(obterValor(OID_HP_TONER_CAPACID));
       } else {
         resultado.alerta          = obterValor(OID_ALERTA);
         resultado.mensagemTela    = obterValor(OID_MENSAGEM_TELA);
-        resultado.totalImpresso   = parseInt(obterValor(OID_SAMSUNG_TOTAL_PAG))  || null;
-        resultado.totalDuplex     = parseInt(obterValor(OID_SAMSUNG_DUPLEX_PAG)) || null;
+        resultado.totalImpresso   = parseNumeroOuNull(obterValor(OID_SAMSUNG_TOTAL_PAG));
+        resultado.totalDuplex     = parseNumeroOuNull(obterValor(OID_SAMSUNG_DUPLEX_PAG));
         const _rawSerial = obterValor(OID_SAMSUNG_NOMES[0]);
         resultado.serialToner = _rawSerial?.match(/S\/N:(\S+)/)?.[1] ?? _rawSerial;
       }
@@ -308,6 +314,12 @@ function consultarImpressora(impressora) {
 // ─── Remove bytes não-ASCII que a HP inclui como prefixo nos OctetStrings ────
 function limparStr(v) {
   return v ? v.replace(/[^\x20-\x7E]/g, '').trim() : null;
+}
+
+function parseNumeroOuNull(v) {
+  if (v == null) return null;
+  const parsed = parseInt(v, 10);
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 // ─── Formata data AAAAMMDD → DD/MM/AAAA ─────────────────────────────────────
@@ -339,24 +351,28 @@ function exibirResultado(resultado) {
 
   if (isHPColorA3 || isHPColor) {
     const tot = resultado.totalImpresso != null ? resultado.totalImpresso.toLocaleString('pt-BR') : 'N/D';
+    const dup = resultado.totalDuplex   != null ? resultado.totalDuplex.toLocaleString('pt-BR')   : 'N/D';
     console.log(`  Total Disp.: ${tot}`);
+    console.log(`  Duplex     : ${dup}`);
   } else if (isHP) {
     const pag  = resultado.paginasRest   != null ? resultado.paginasRest.toLocaleString('pt-BR')   : 'N/D';
     const imp  = resultado.tonerImpresso != null ? resultado.tonerImpresso.toLocaleString('pt-BR') : 'N/D';
     const tot  = resultado.totalImpresso != null ? resultado.totalImpresso.toLocaleString('pt-BR') : 'N/D';
+    const dup  = resultado.totalDuplex   != null ? resultado.totalDuplex.toLocaleString('pt-BR')   : 'N/D';
     const cap  = resultado.tonerCapacid  ?? 'N/D';
     console.log(`  Cartucho   : ${resultado.tonerPN      ?? 'N/D'}`);
     console.log(`  Ser.Cartu. : ${resultado.tonerSerial  ?? 'N/D'}`);
     console.log(`  Pág. Rest. : ${pag}`);
     console.log(`  Pág. Impr. : ${imp}  (capacidade: ${cap})`);
     console.log(`  Total Disp.: ${tot}`);
+    console.log(`  Duplex     : ${dup}`);
     console.log(`  Instalado  : ${formatarData(resultado.tonerInstall)}`);
     console.log(`  Últ. Uso   : ${formatarData(resultado.tonerLastUse)}`);
   } else {
     const tot = resultado.totalImpresso != null ? resultado.totalImpresso.toLocaleString('pt-BR') : 'N/D';
     const dup = resultado.totalDuplex   != null ? resultado.totalDuplex.toLocaleString('pt-BR')   : 'N/D';
     console.log(`  Total Disp.: ${tot}`);
-    console.log(`  F&V Disp.  : ${dup}`);
+    console.log(`  Duplex     : ${dup}`);
     console.log(`  Alerta     : ${resultado.alerta       ?? 'Nenhum'}`);
     console.log(`  Mensagem   : ${resultado.mensagemTela ?? 'Não disponível'}`);
     console.log(`  Serial Ton.: ${resultado.serialToner  ?? 'Não disponível'}`);

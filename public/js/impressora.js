@@ -55,6 +55,27 @@ function formatarDataHora(iso) {
   });
 }
 
+function formatarNumero(valor) {
+  if (valor == null || Number.isNaN(valor)) return '—';
+  return Number.isInteger(valor)
+    ? valor.toLocaleString('pt-BR')
+    : valor.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function calcMetricasImpressao(totalImpressoes, totalDuplex) {
+  const total = Number.isFinite(totalImpressoes) ? totalImpressoes : null;
+  const duplex = Number.isFinite(totalDuplex)
+    ? Math.max(0, total != null ? Math.min(totalDuplex, total) : totalDuplex)
+    : null;
+
+  return {
+    total,
+    duplex,
+    frente: total != null && duplex != null ? Math.max(0, total - duplex) : null,
+    folhas: total != null && duplex != null ? Math.max(0, total - (duplex / 2)) : total,
+  };
+}
+
 // ─── ID da impressora (query string) ─────────────────────────────────────────
 const id = new URLSearchParams(location.search).get('id');
 if (!id) location.href = '/';
@@ -74,6 +95,7 @@ async function carregar() {
   document.getElementById('nav-titulo').textContent = impressora.modelo;
 
   const ultimo = historico.at(-1);
+  const metricasAtuais = calcMetricasImpressao(ultimo?.total_paginas_dispositivo, ultimo?.total_duplex);
 
   function ehTonerPuro(nome) {
     const n = nome.toLowerCase();
@@ -102,8 +124,10 @@ async function carregar() {
     ['Série',         impressora.serie ?? '—'],
     ['IP Liberty',    impressora.ip_liberty],
     ['IP Prodam',     impressora.ip_prodam ?? '—'],
-    ['Total de Págs', ultimo?.total_paginas_dispositivo?.toLocaleString('pt-BR') ?? '—'],
-    ['Duplex',        ultimo?.total_duplex != null ? ultimo.total_duplex.toLocaleString('pt-BR') : '—'],
+    ['Total de Impr.', formatarNumero(metricasAtuais.total)],
+    ['Frente',        formatarNumero(metricasAtuais.frente)],
+    ['Duplex',        formatarNumero(metricasAtuais.duplex)],
+    ['Folhas Est.',   formatarNumero(metricasAtuais.folhas)],
     ['Snapshots',     historico.length],
   ];
 
@@ -225,56 +249,76 @@ async function carregar() {
       '<p class="text-muted text-center py-4">Nenhum dado histórico ainda.</p>';
   }
 
-  // ── Gráfico de consumo diário de papel ────────────────────────────────────
+  // ── Gráfico de consumo diário de impressões ───────────────────────────────
   {
     const LIMITE_DIAS_PAPEL = 14;
 
-    // Agrupa snapshots por dia, mantendo o último (maior total) de cada dia
-    const porDia = new Map(); // 'YYYY-MM-DD' → { paginas, duplex }
+    // Agrupa snapshots por dia, preservando primeiro e último snapshot úteis.
+    const porDia = new Map(); // 'YYYY-MM-DD' → { firstPag, lastPag, firstDup, lastDup, dupCount }
     for (const s of historico) {
       const dia = s.coletado_em.slice(0, 10);
-      const cur = porDia.get(dia);
       const pag = s.total_paginas_dispositivo ?? null;
       const dup = s.total_duplex ?? null;
-      // Usa o maior valor do dia (snapshots estão em ordem crescente)
-      if (!cur
-          || (pag != null && (cur.paginas == null || pag > cur.paginas))) {
-        porDia.set(dia, { paginas: pag, duplex: dup });
+      let cur = porDia.get(dia);
+
+      if (!cur) {
+        cur = { firstPag: pag, lastPag: pag, firstDup: dup, lastDup: dup, dupCount: dup != null ? 1 : 0 };
+        porDia.set(dia, cur);
+        continue;
+      }
+
+      if (cur.firstPag == null && pag != null) cur.firstPag = pag;
+      if (pag != null) cur.lastPag = pag;
+
+      if (dup != null) {
+        if (cur.firstDup == null) cur.firstDup = dup;
+        cur.lastDup = dup;
+        cur.dupCount += 1;
       }
     }
 
-    // Ordena os dias e limita a LIMITE_DIAS_PAPEL + 1 (precisa do dia anterior para calcular o delta)
+    // Ordena os dias e limita aos últimos N dias com atividade.
     let dias = [...porDia.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    if (dias.length > LIMITE_DIAS_PAPEL + 1) dias = dias.slice(-(LIMITE_DIAS_PAPEL + 1));
+    if (dias.length > LIMITE_DIAS_PAPEL) dias = dias.slice(-LIMITE_DIAS_PAPEL);
 
-    // Calcula deltas diários entre entradas consecutivas com ambos os valores
+    // Calcula deltas diários. Quando ainda não existe baseline do dia anterior
+    // com duplex, usa o primeiro e o último snapshot do próprio dia.
     const labelsF    = [];
-    const dadosFrst  = [];  // frente (simples): delta_paginas - 2*delta_duplex
-    const dadosDpx   = [];  // duplex: delta_duplex
-    const dadosTotFolhas = []; // total folhas: delta_paginas - delta_duplex
+    const dadosFrente = []; // impressões em modo simplex/frente
+    const dadosDuplex = []; // impressões em modo duplex
+    const dadosTotal  = []; // total de impressões
+    let diasSemBaseDuplex = 0;
 
-    for (let i = 1; i < dias.length; i++) {
+    for (let i = 0; i < dias.length; i++) {
       const [diaLabel, cur] = dias[i];
-      const [, prev]        = dias[i - 1];
+      const prev = i > 0 ? dias[i - 1][1] : null;
 
-      if (cur.paginas == null || prev.paginas == null) continue;
-      const deltaPag = cur.paginas - prev.paginas;
-      if (deltaPag <= 0) continue; // sem impressão ou reset de contador
+      let deltaTotal = null;
+      if (cur.lastPag != null && prev?.lastPag != null) {
+        deltaTotal = cur.lastPag - prev.lastPag;
+      } else if (cur.firstPag != null && cur.lastPag != null) {
+        deltaTotal = cur.lastPag - cur.firstPag;
+      }
 
-      const hasDuplex = cur.duplex != null && prev.duplex != null;
-      const deltaDup  = hasDuplex ? Math.max(0, cur.duplex - prev.duplex) : null;
+      if (deltaTotal <= 0) continue; // sem impressão ou reset de contador
 
-      // frente simples = faces totais - 2 × sheets duplex
-      const frente = deltaDup != null
-        ? Math.max(0, deltaPag - 2 * deltaDup)
-        : null;
+      let deltaDup = null;
+      if (cur.lastDup != null && prev?.lastDup != null) {
+        deltaDup = Math.max(0, cur.lastDup - prev.lastDup);
+      } else if (cur.dupCount >= 2 && cur.firstDup != null && cur.lastDup != null) {
+        deltaDup = Math.max(0, cur.lastDup - cur.firstDup);
+      }
+
+      const metricas = calcMetricasImpressao(deltaTotal, deltaDup);
+      const frente = metricas.frente ?? metricas.total;
+      if (metricas.duplex == null) diasSemBaseDuplex += 1;
 
       // Formata label como DD/MM
-      const [ano, mes, d] = diaLabel.split('-');
+      const [, mes, d] = diaLabel.split('-');
       labelsF.push(`${d}/${mes}`);
-      dadosFrst.push(frente);
-      dadosDpx.push(deltaDup);
-      dadosTotFolhas.push(deltaDup != null ? frente + deltaDup : deltaPag);
+      dadosFrente.push(frente);
+      dadosDuplex.push(metricas.duplex);
+      dadosTotal.push(metricas.total);
     }
 
     const subEl = document.getElementById('folhas-subtitulo');
@@ -283,27 +327,33 @@ async function carregar() {
         '<p class="text-muted text-center py-4">Dados insuficientes para o gráfico diário.</p>';
       if (subEl) subEl.textContent = '';
     } else {
-      if (subEl) subEl.textContent = `${labelsF.length} dia${labelsF.length !== 1 ? 's' : ''}`;
+      if (subEl) {
+        const base = `${labelsF.length} dia${labelsF.length !== 1 ? 's' : ''}`;
+        subEl.textContent = diasSemBaseDuplex > 0
+          ? `${base} • frente usa total nos dias sem base de duplex`
+          : base;
+      }
 
-      const temDuplex = dadosDpx.some(v => v != null && v > 0);
+      const temDuplex = dadosDuplex.some(v => v != null);
       const datasets  = [];
+
+      datasets.push({
+        label:           'Frente',
+        data:            dadosFrente,
+        borderColor:     '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.12)',
+        borderWidth:     2.5,
+        tension:         0.3,
+        spanGaps:        false,
+        pointRadius:     labelsF.length > 30 ? 2 : 4,
+        pointBackgroundColor: '#3b82f6',
+        fill: true,
+      });
 
       if (temDuplex) {
         datasets.push({
-          label:           'Frente (simples)',
-          data:            dadosFrst,
-          borderColor:     '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.12)',
-          borderWidth:     2.5,
-          tension:         0.3,
-          spanGaps:        false,
-          pointRadius:     labelsF.length > 30 ? 2 : 4,
-          pointBackgroundColor: '#3b82f6',
-          fill: true,
-        });
-        datasets.push({
           label:           'Duplex',
-          data:            dadosDpx,
+          data:            dadosDuplex,
           borderColor:     '#10b981',
           backgroundColor: 'rgba(16,185,129,0.08)',
           borderWidth:     2.5,
@@ -311,20 +361,6 @@ async function carregar() {
           spanGaps:        false,
           pointRadius:     labelsF.length > 30 ? 2 : 4,
           pointBackgroundColor: '#10b981',
-          fill: true,
-        });
-      } else {
-        // Sem dados de duplex — mostra apenas total de folhas
-        datasets.push({
-          label:           'Folhas',
-          data:            dadosTotFolhas,
-          borderColor:     '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.12)',
-          borderWidth:     2.5,
-          tension:         0.3,
-          spanGaps:        false,
-          pointRadius:     labelsF.length > 30 ? 2 : 4,
-          pointBackgroundColor: '#3b82f6',
           fill: true,
         });
       }
@@ -349,7 +385,7 @@ async function carregar() {
             legend: { position: 'bottom', labels: { font: { size: 14 } } },
             tooltip: {
               callbacks: {
-                label: ctx => `${ctx.dataset.label}: ${(ctx.parsed.y ?? 0).toLocaleString('pt-BR')} folhas`,
+                label: ctx => `${ctx.dataset.label}: ${(ctx.parsed.y ?? 0).toLocaleString('pt-BR')} impressões`,
               },
             },
           },

@@ -78,8 +78,8 @@ export function abrirBanco() {
       id                         INTEGER PRIMARY KEY AUTOINCREMENT,
       impressora_id              INTEGER NOT NULL REFERENCES impressoras(id),
       coletado_em                TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-      total_paginas_dispositivo  INTEGER,   -- prtMarkerLifeCount (faces totais)
-      total_duplex               INTEGER,   -- contador duplex Samsung proprietário
+      total_paginas_dispositivo  INTEGER,   -- prtMarkerLifeCount (total de impressões)
+      total_duplex               INTEGER,   -- contador acumulado de impressões duplex
       alerta                     TEXT,      -- Samsung/408dn: OID alerta
       mensagem_tela              TEXT       -- Samsung/408dn: mensagem display
     );
@@ -291,7 +291,7 @@ export const salvarResultado = (db) => {
     const { lastInsertRowid: snapId } = insertSnap.run({
       impressora_id:             impressoraId,
       total_paginas_dispositivo: resultado.totalImpresso ?? null,
-      total_duplex:              isSamsung ? (resultado.totalDuplex ?? null) : null,
+      total_duplex:              resultado.totalDuplex   ?? null,
       alerta:                    resultado.alerta        ?? null,
       mensagem_tela:             resultado.mensagemTela  ?? null,
     });

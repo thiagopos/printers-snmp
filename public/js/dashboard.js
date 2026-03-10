@@ -154,7 +154,7 @@ function sortarImpressoras(lista) {
     switch (sortCol) {
       case 'modelo':  return sortDir * (a.modelo ?? '').localeCompare(b.modelo ?? '', 'pt-BR');
       case 'predio':  return sortDir * (a.local?.predio ?? '').localeCompare(b.local?.predio ?? '', 'pt-BR');
-      case 'andar':   return sortDir * (a.local?.andar  ?? '').localeCompare(b.local?.andar  ?? '', 'pt-BR');
+      case 'andar':   return sortDir * ((a.local?.andar ?? -1) - (b.local?.andar ?? -1));
       case 'setor':   return sortDir * (a.local?.nome_setor ?? a.setor ?? '').localeCompare(b.local?.nome_setor ?? b.setor ?? '', 'pt-BR');
       case 'local':   return sortDir * (a.local?.local_instalacao ?? '').localeCompare(b.local?.local_instalacao ?? '', 'pt-BR');
       case 'toner':   return sortDir * (tonerPreto(a.consumiveis) - tonerPreto(b.consumiveis));

@@ -26,6 +26,20 @@ function calcDiasRestantes(historico, nomeCons) {
   return Math.round(last.pct / (deltaPct / deltaDias));
 }
 
+function calcMetricasImpressao(totalImpressoes, totalDuplex) {
+  const total = Number.isFinite(totalImpressoes) ? totalImpressoes : null;
+  const duplex = Number.isFinite(totalDuplex)
+    ? Math.max(0, total != null ? Math.min(totalDuplex, total) : totalDuplex)
+    : null;
+
+  return {
+    total,
+    duplex,
+    frente: total != null && duplex != null ? Math.max(0, total - duplex) : null,
+    folhas: total != null && duplex != null ? Math.max(0, total - (duplex / 2)) : total,
+  };
+}
+
 // ─── Rotas ────────────────────────────────────────────────────────────────────
 export function criarRotasApi(db) {
   const router = Router();
@@ -225,7 +239,7 @@ export function criarRotasApi(db) {
         (SELECT COALESCE(SUM(delta), 0) FROM delta_d) AS duplex
     `).get(dtIni7, dtIni7, dtFim7, dtIni7, dtIni7, dtFim7);
 
-    const folhasSemana = Math.max(0, (semanaRow.paginas ?? 0) - (semanaRow.duplex ?? 0));
+    const folhasSemana = Math.max(0, (semanaRow.paginas ?? 0) - ((semanaRow.duplex ?? 0) / 2));
     const resmasSemana = Math.ceil(folhasSemana / 500);
 
     const modoAtivo = usandoIntervalo ? 'intervalo' : (periodo ?? 'semana');
@@ -344,9 +358,18 @@ export function criarRotasApi(db) {
     }
 
     const data = rows.map(r => {
-      const folhas = Math.max(0, r.faces - r.duplex);
+      const metricas = calcMetricasImpressao(r.faces, r.duplex);
+      const folhas = metricas.folhas ?? 0;
       const resmas = Math.ceil(folhas / 500);
-      return { impressora_id: r.impressora_id, modelo: r.modelo, faces: r.faces, duplex: r.duplex, folhas, resmas };
+      return {
+        impressora_id: r.impressora_id,
+        modelo: r.modelo,
+        faces: metricas.total ?? 0,
+        duplex: metricas.duplex ?? 0,
+        frente: metricas.frente ?? 0,
+        folhas,
+        resmas,
+      };
     });
 
     res.json({ data });
