@@ -40,6 +40,10 @@ function calcMetricasImpressao(totalImpressoes, totalDuplex) {
   };
 }
 
+// Teto de delta por coleta: Samsung M4020 = 40 ppm, HP E52645 = 45 ppm → máx ~1.950 pág em 30 min.
+// Qualquer delta individual acima deste valor é um glitch de firmware do contador SNMP e é ignorado.
+const MAX_DELTA_PAGINAS = 2000;
+
 // ─── Rotas ────────────────────────────────────────────────────────────────────
 export function criarRotasApi(db) {
   const router = Router();
@@ -155,10 +159,11 @@ export function criarRotasApi(db) {
           WHERE total_paginas_dispositivo IS NOT NULL
             AND date(coletado_em) >= ? AND date(coletado_em) <= ?
         ),
-        -- Soma apenas deltas positivos (ignora resets de contador)
+        -- Soma apenas deltas positivos e abaixo do teto anti-spike (ignora resets e glitches de firmware)
         delta AS (
           SELECT sp.impressora_id,
             SUM(CASE WHEN sp.pag > COALESCE(sp.pag_ant, pp.pag)
+                          AND sp.pag - COALESCE(sp.pag_ant, pp.pag) <= ${MAX_DELTA_PAGINAS}
                      THEN sp.pag - COALESCE(sp.pag_ant, pp.pag) ELSE 0 END) AS total_paginas
           FROM snaps_periodo sp
           LEFT JOIN pre_periodo pp ON pp.impressora_id = sp.impressora_id
@@ -204,6 +209,7 @@ export function criarRotasApi(db) {
       delta_p AS (
         SELECT sp.impressora_id,
           SUM(CASE WHEN sp.pag > COALESCE(sp.pag_ant, pp.pag)
+                        AND sp.pag - COALESCE(sp.pag_ant, pp.pag) <= ${MAX_DELTA_PAGINAS}
                    THEN sp.pag - COALESCE(sp.pag_ant, pp.pag) ELSE 0 END) AS delta
         FROM snaps_p sp LEFT JOIN pre_p pp ON pp.impressora_id = sp.impressora_id
         WHERE COALESCE(sp.pag_ant, pp.pag) IS NOT NULL
@@ -317,6 +323,7 @@ export function criarRotasApi(db) {
         delta_p AS (
           SELECT sp.impressora_id,
             SUM(CASE WHEN sp.pag > COALESCE(sp.pag_ant, pp.pag)
+                          AND sp.pag - COALESCE(sp.pag_ant, pp.pag) <= ${MAX_DELTA_PAGINAS}
                      THEN sp.pag - COALESCE(sp.pag_ant, pp.pag) ELSE 0 END) AS faces
           FROM snaps_p sp LEFT JOIN pre_p pp ON pp.impressora_id = sp.impressora_id
           WHERE COALESCE(sp.pag_ant, pp.pag) IS NOT NULL
@@ -627,6 +634,7 @@ export function criarRotasApi(db) {
         delta AS (
           SELECT sp.impressora_id,
             SUM(CASE WHEN sp.pag > COALESCE(sp.pag_ant, pp.pag)
+                          AND sp.pag - COALESCE(sp.pag_ant, pp.pag) <= ${MAX_DELTA_PAGINAS}
                      THEN sp.pag - COALESCE(sp.pag_ant, pp.pag) ELSE 0 END) AS total_paginas
           FROM snaps_periodo sp
           LEFT JOIN pre_periodo pp ON pp.impressora_id = sp.impressora_id
