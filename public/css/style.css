@@ -65,6 +65,23 @@ body { font-size: 1.2rem; background: #f4f6f9; }
   .icon-box i { font-size: 1.6rem; }
 }
 
+/* ── Overlay de carregamento dos gráficos ─────────────────────────────────── */
+.chart-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.85);
+  border-radius: 0 0 1rem 1rem;
+  z-index: 5;
+  transition: opacity .25s ease;
+}
+.chart-overlay.oculto {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── Badge série backup / trocada ────────────────────────────────────────── */
 .badge-serie-backup {
   display: inline-flex; align-items: center;

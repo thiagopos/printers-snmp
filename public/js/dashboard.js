@@ -366,6 +366,41 @@ function renderTabela(impressoras) {
   }).join('');
 }
 
+// ─── Cache local (stale-while-revalidate) ────────────────────────────────────
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
+function _cacheKeySummary() {
+  if (intervaloAtivo) {
+    const de  = document.getElementById('filtro-de').value;
+    const ate = document.getElementById('filtro-ate').value;
+    return `cache_summary_${de}_${ate}`;
+  }
+  return `cache_summary_${periodoAtual}`;
+}
+
+function salvarCache(tipo, dados) {
+  try {
+    const key = tipo === 'impressoras' ? 'cache_impressoras' : _cacheKeySummary();
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), dados }));
+  } catch {}
+}
+
+function lerCache(tipo) {
+  try {
+    const key = tipo === 'impressoras' ? 'cache_impressoras' : _cacheKeySummary();
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { ts, dados } = JSON.parse(raw);
+    return Date.now() - ts <= CACHE_TTL_MS ? dados : null;
+  } catch { return null; }
+}
+
+function setLoadingGraficos(ativo) {
+  ['overlay-donut', 'overlay-paginas'].forEach(id => {
+    document.getElementById(id)?.classList.toggle('oculto', !ativo);
+  });
+}
+
 // ─── Carga e atualização ──────────────────────────────────────────────────────
 async function carregarTudo() {
   let summaryUrl = `/api/summary?periodo=${periodoAtual}`;
@@ -375,21 +410,44 @@ async function carregarTudo() {
     if (de && ate) summaryUrl = `/api/summary?de=${de}&ate=${ate}`;
   }
 
-  const [summary, impressoras] = await Promise.all([
-    fetch(summaryUrl).then(r => r.json()),
-    fetch('/api/impressoras').then(r => r.json()),
-  ]);
+  // Renderiza do cache imediatamente — sem esperar a rede
+  const cacheSummary     = lerCache('summary');
+  const cacheImpressoras = lerCache('impressoras');
 
-  dadosImpressoras = impressoras;
+  if (cacheSummary && cacheImpressoras) {
+    dadosImpressoras = cacheImpressoras;
+    renderCards(cacheSummary);
+    renderDonut(cacheSummary);
+    renderBarPaginas(cacheSummary.top_paginas);
+    atualizarBotoesPeriodo(cacheSummary.de, cacheSummary.ate);
+    aplicarFiltroESort();
+  } else {
+    // Sem cache: mostra overlay enquanto carrega
+    setLoadingGraficos(true);
+  }
 
-  renderCards(summary);
-  renderDonut(summary);
-  renderBarPaginas(summary.top_paginas);
-  atualizarBotoesPeriodo(summary.de, summary.ate);
-  aplicarFiltroESort();
+  // Busca dados frescos (em background se havia cache)
+  try {
+    const [summary, impressoras] = await Promise.all([
+      fetch(summaryUrl).then(r => r.json()),
+      fetch('/api/impressoras').then(r => r.json()),
+    ]);
 
-  document.getElementById('ultima-atualizacao').textContent =
-    'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+    salvarCache('summary', summary);
+    salvarCache('impressoras', impressoras);
+
+    dadosImpressoras = impressoras;
+    renderCards(summary);
+    renderDonut(summary);
+    renderBarPaginas(summary.top_paginas);
+    atualizarBotoesPeriodo(summary.de, summary.ate);
+    aplicarFiltroESort();
+
+    document.getElementById('ultima-atualizacao').textContent =
+      'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+  } finally {
+    setLoadingGraficos(false);
+  }
 }
 
 // ─── Filtro da tabela ─────────────────────────────────────────────────────────
